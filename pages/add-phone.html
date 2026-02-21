@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Phone — Max Mobile Shop</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+  <div class="app-layout">
+
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-mobile-alt"></i></div>
+        <span class="sidebar-title">Max Mobile</span>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">staff</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item" data-page="dashboard" href="dashboard.html">
+          <i class="fas fa-th-large"></i><span>Dashboard</span>
+          <span class="nav-tooltip">Dashboard</span>
+        </a>
+        <a class="nav-item" data-page="add-phone" href="add-phone.html">
+          <i class="fas fa-plus-circle"></i><span>Add Phones</span>
+          <span class="nav-tooltip">Add Phones</span>
+        </a>
+        <a class="nav-item" data-page="view-stock" href="view-stock.html">
+          <i class="fas fa-boxes"></i><span>View All Stock</span>
+          <span class="nav-tooltip">View Stock</span>
+        </a>
+        <div class="nav-section-label">Sales</div>
+        <a class="nav-item" data-page="sales" href="sales.html">
+          <i class="fas fa-cash-register"></i><span>Sales / Billing</span>
+          <span class="nav-tooltip">Sales</span>
+        </a>
+        <a class="nav-item" data-page="sales-history" href="sales-history.html">
+          <i class="fas fa-history"></i><span>Sales History</span>
+          <span class="nav-tooltip">Sales History</span>
+        </a>
+        <div class="nav-section-label">Management</div>
+        <a class="nav-item" data-page="third-person" href="third-person.html">
+          <i class="fas fa-users"></i><span>Third Persons</span>
+          <span class="nav-tooltip">Third Persons</span>
+        </a>
+        <a class="nav-item admin-only" data-page="staff" href="staff-management.html">
+          <i class="fas fa-user-shield"></i><span>Staff Management</span>
+          <span class="nav-tooltip">Staff</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a class="nav-item" id="logoutBtn" href="#">
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </a>
+      </div>
+    </aside>
+    <!-- ═══════════════ END SIDEBAR ═══════════════ -->
+
+    <div class="main-content" id="mainContent">
+
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button id="mobileToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="page-title">Add Phone to Stock</div>
+            <div class="breadcrumb">
+              <i class="fas fa-home"></i> Stock Entry
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="card" style="max-width:900px;margin:0 auto;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <i class="fas fa-plus-circle" style="color:#4F46E5;margin-right:8px;"></i>
+                New Stock Entry
+              </div>
+              <div class="card-subtitle">Fill in all phone details below</div>
+            </div>
+          </div>
+
+          <form id="addPhoneForm" novalidate>
+
+            <!-- PHONE DETAILS -->
+            <div class="form-section-title">
+              <i class="fas fa-mobile-alt"></i> Phone Details
+            </div>
+
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label><i class="fas fa-tag"></i> Brand *</label>
+                <select id="fBrand" required>
+                  <option value="">Select Brand</option>
+                  <option>Samsung</option>
+                  <option>Apple</option>
+                  <option>Xiaomi</option>
+                  <option>Realme</option>
+                  <option>OnePlus</option>
+                  <option>Vivo</option>
+                  <option>Oppo</option>
+                  <option>Motorola</option>
+                  <option>Nokia</option>
+                  <option>Google</option>
+                  <option>Nothing</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-mobile"></i> Model *</label>
+                <input type="text" id="fModel" placeholder="e.g. Galaxy A54" required />
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-sort-numeric-up"></i> Quantity <span
+                    style="font-size:11px;color:#64748B;font-weight:400;">(optional)</span></label>
+                <input type="number" id="fQuantity" placeholder="1" min="1" max="50" value="" />
+              </div>
+            </div>
+
+            <!-- IMEI Section (dynamic) -->
+            <div id="imeiSection">
+              <div class="form-group">
+                <label><i class="fas fa-barcode"></i> IMEI Number *</label>
+                <input type="text" id="fImei" placeholder="15-digit IMEI" maxlength="15" pattern="\d{15}" required />
+              </div>
+            </div>
+
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label><i class="fas fa-memory"></i> RAM</label>
+                <select id="fRam">
+                  <option value="">— Select RAM —</option>
+                  <option>1 GB</option>
+                  <option>2 GB</option>
+                  <option>3 GB</option>
+                  <option>4 GB</option>
+                  <option>6 GB</option>
+                  <option>8 GB</option>
+                  <option>12 GB</option>
+                  <option>16 GB</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-hdd"></i> Storage</label>
+                <select id="fStorage">
+                  <option value="">— Select Storage —</option>
+                  <option>32 GB</option>
+                  <option>64 GB</option>
+                  <option>128 GB</option>
+                  <option>256 GB</option>
+                  <option>512 GB</option>
+                  <option>1 Tb</option>
+                  <option>2 Tb</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-palette"></i> Color</label>
+                <input type="text" id="fColor" placeholder="e.g. Midnight Black" />
+              </div>
+            </div>
+
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label><i class="fas fa-rupee-sign"></i> Purchase Price (₹) *</label>
+                <input type="number" id="fPurchasePrice" placeholder="0" min="0" required />
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-rupee-sign"></i> Selling Price (₹) *</label>
+                <input type="number" id="fSellingPrice" placeholder="0" min="0" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-align-left"></i> Description / Condition</label>
+              <textarea id="fDescription"
+                placeholder="e.g. Good condition, minor scratches on back. Original charger included."></textarea>
+            </div>
+
+            <!-- THIRD PARTY SECTION -->
+            <div class="form-section-title">
+              <i class="fas fa-user-tie"></i> Supplier / Third Party
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <label style="display:inline-flex;align-items:center;gap:10px;cursor:pointer;
+              padding:12px 16px;background:#F8FAFC;border-radius:10px;
+              border:2px solid #E2E8F0;font-size:14px;font-weight:500;color:#374151;">
+                <input type="checkbox" id="fIsThirdParty"
+                  style="width:18px;height:18px;accent-color:#4F46E5;cursor:pointer;" />
+                This phone belongs to a Third Party Supplier
+              </label>
+            </div>
+
+            <div id="thirdPartyFields"
+              style="display:none;background:#F0F4FF;border-radius:12px;padding:20px;border:2px solid #C7D2FE;margin-bottom:8px;position:relative;">
+
+              <!-- Supplier Search -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label><i class="fas fa-search"></i> Search Existing Supplier</label>
+                <div style="position:relative;">
+                  <input type="text" id="supplierSearch" placeholder="Type name or phone to find supplier..."
+                    autocomplete="off" />
+                  <div id="supplierSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:100;background:#fff;
+                    border:1.5px solid #E2E8F0;border-radius:10px;box-shadow:var(--shadow-lg);margin-top:4px;
+                    max-height:200px;overflow-y:auto;padding:8px 0;">
+                  </div>
+                </div>
+                <div style="font-size:11px;color:#64748B;margin-top:4px;">
+                  Select a supplier below to auto-fill, or fill details manually for a new supplier.
+                </div>
+              </div>
+
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label><i class="fas fa-user"></i> Supplier Name *</label>
+                  <input type="text" id="fSupplierName" placeholder="Full Name" />
+                </div>
+                <div class="form-group">
+                  <label><i class="fas fa-qrcode"></i> Supplier UPI ID *</label>
+                  <input type="text" id="fSupplierUpi" placeholder="name@upi or 9876543210@paytm" />
+                </div>
+                <div class="form-group">
+                  <label><i class="fas fa-phone"></i> Supplier Phone</label>
+                  <input type="tel" id="fSupplierPhone" placeholder="10-digit number" maxlength="10" />
+                </div>
+              </div>
+            </div>
+
+            <!-- OLD OWNER DETAILS -->
+            <div class="form-section-title">
+              <i class="fas fa-id-card"></i> Old Owner Details (KYC)
+            </div>
+
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label><i class="fas fa-user-clock"></i> Old Owner Name</label>
+                <input type="text" id="fOldOwnerName" placeholder="Previous owner" />
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-rupee-sign"></i> Old Purchase Price (₹)</label>
+                <input type="number" id="fOldPurchasePrice" placeholder="0" min="0" />
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-id-badge"></i> Aadhar Number</label>
+                <input type="text" id="fAadhar" placeholder="12-digit Aadhar" maxlength="12" />
+              </div>
+            </div>
+
+            <!-- Error + Submit -->
+            <div id="formError" class="error-msg" style="display:none;margin-top:8px;"></div>
+
+            <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap;">
+              <button type="submit" class="btn-primary" id="submitBtn">
+                <i class="fas fa-plus" id="submitIcon"></i>
+                <span id="submitText">Add to Stock</span>
+              </button>
+              <button type="button" class="btn-secondary" onclick="clearForm()">
+                <i class="fas fa-redo"></i> Reset Form
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div><!-- end main-content -->
+  </div><!-- end app-layout -->
+
+  <div id="toast-container"></div>
+
+  <!-- ─────────────────────────────────────────────────────
+     ALL FIREBASE + LOGIC IN ONE SELF-CONTAINED MODULE
+     ───────────────────────────────────────────────────── -->
+  <script type="module">
+
+    /* ── 1. Firebase (import from central config) ── */
+    import { requireAuth } from '../js/auth.js';
+    import { initSidebar } from '../js/sidebar.js';
+    import { db, auth } from '../firebase-config.js';
+    import { onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      collection, addDoc, getDocs,
+      query, where, doc, getDoc, updateDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
+    /* ── 2. Auth Guard ── */
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = '../index.html'; return; }
+
+      let userData;
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (!snap.exists() || !snap.data().isActive) {
+          await signOut(auth); window.location.href = '../index.html'; return;
+        }
+        userData = { uid: user.uid, email: user.email, ...snap.data() };
+        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+      } catch (e) {
+        console.error('Auth check failed:', e);
+        window.location.href = '../index.html'; return;
+      }
+
+      initSidebar('add-phone');
+      let suppliers = [];
+      try {
+        const snap = await getDocs(collection(db, 'thirdPersons'));
+        snap.forEach(d => suppliers.push({ id: d.id, ...d.data() }));
+      } catch (e) { console.error('Error loading suppliers:', e); }
+
+      initForm(userData, suppliers);
+    });
+
+
+    function initForm(user, suppliers) {
+      // Toggle third party fields
+      document.getElementById('fIsThirdParty').addEventListener('change', (e) => {
+        document.getElementById('thirdPartyFields').style.display =
+          e.target.checked ? 'block' : 'none';
+      });
+
+      // Supplier Search Logic
+      const searchInput = document.getElementById('supplierSearch');
+      const resultsWrap = document.getElementById('supplierSearchResults');
+
+      searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.trim().toLowerCase();
+        if (!term) {
+          resultsWrap.style.display = 'none';
+          return;
+        }
+
+        const matches = suppliers.filter(s =>
+          (s.name || '').toLowerCase().includes(term) ||
+          (s.phone || '').includes(term)
+        );
+
+        if (matches.length === 0) {
+          resultsWrap.innerHTML = '<div style="padding:10px 16px;font-size:13px;color:#94A3B8;">No suppliers found.</div>';
+        } else {
+          resultsWrap.innerHTML = matches.map(s => `
+            <div class="supplier-result-item" 
+              style="padding:10px 16px;cursor:pointer;border-bottom:1px solid #F1F5F9;transition:background 0.2s;"
+              onclick="selectSupplier('${s.id}')">
+              <div style="font-size:14px;font-weight:600;color:#1E293B;">${s.name}</div>
+              <div style="font-size:11px;color:#64748B;">Phone: ${s.phone || '—'} &nbsp;•&nbsp; UPI: ${s.upiId || '—'}</div>
+            </div>
+          `).join('');
+
+          // Add hover effect via JS since we don't have a dedicated CSS class for this in main.css yet
+          resultsWrap.querySelectorAll('.supplier-result-item').forEach(el => {
+            el.addEventListener('mouseenter', () => el.style.background = '#F8FAFC');
+            el.addEventListener('mouseleave', () => el.style.background = '#fff');
+          });
+        }
+        resultsWrap.style.display = 'block';
+      });
+
+      // Close results when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !resultsWrap.contains(e.target)) {
+          resultsWrap.style.display = 'none';
+        }
+      });
+
+      window.selectSupplier = function (id) {
+        const s = suppliers.find(item => item.id === id);
+        if (s) {
+          document.getElementById('fSupplierName').value = s.name || '';
+          document.getElementById('fSupplierUpi').value = s.upiId || '';
+          document.getElementById('fSupplierPhone').value = s.phone || '';
+          document.getElementById('supplierSearch').value = s.name;
+          resultsWrap.style.display = 'none';
+        }
+      };
+
+      // Quantity → dynamic IMEI inputs
+      document.getElementById('fQuantity').addEventListener('input', function () {
+        const qty = parseInt(this.value) || 1;
+        renderImeiInputs(qty);
+      });
+
+      // Reset
+      window.clearForm = function () {
+        document.getElementById('addPhoneForm').reset();
+        document.getElementById('thirdPartyFields').style.display = 'none';
+        resultsWrap.style.display = 'none';
+        document.getElementById('formError').style.display = 'none';
+        renderImeiInputs(1); // reset to single IMEI
+      };
+
+      // Submit
+      document.getElementById('addPhoneForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleSubmit(user);
+      });
+    }
+
+    function renderImeiInputs(qty) {
+      const section = document.getElementById('imeiSection');
+      if (qty <= 1 || isNaN(qty)) {
+        section.innerHTML = `
+          <div class="form-group">
+            <label><i class="fas fa-barcode"></i> IMEI Number *</label>
+            <input type="text" id="fImei" placeholder="15-digit IMEI" maxlength="15" pattern="\\d{15}" required />
+          </div>`;
+        return;
+      }
+      // Multiple IMEIs
+      let html = `<div style="background:#F0F4FF;border-radius:12px;padding:20px;border:2px solid #C7D2FE;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:600;color:#4F46E5;margin-bottom:14px;"><i class="fas fa-barcode"></i> IMEI Numbers (${qty} phones)</div>
+        <div class="form-row" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">`;
+      for (let i = 1; i <= qty; i++) {
+        html += `
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:12px;">Phone ${i} IMEI *</label>
+            <input type="text" id="fImei_${i}" placeholder="15-digit IMEI" maxlength="15" pattern="\\d{15}" required />
+          </div>`;
+      }
+      html += `</div></div>`;
+      section.innerHTML = html;
+    }
+
+    async function handleSubmit(user) {
+      const errEl = document.getElementById('formError');
+      const submitBtn = document.getElementById('submitBtn');
+      const submitIcon = document.getElementById('submitIcon');
+      const submitTxt = document.getElementById('submitText');
+
+      errEl.style.display = 'none';
+
+      // Read common values
+      const brand = document.getElementById('fBrand').value.trim();
+      const model = document.getElementById('fModel').value.trim();
+      const ram = document.getElementById('fRam').value;
+      const storage = document.getElementById('fStorage').value;
+      const color = document.getElementById('fColor').value.trim();
+      const purchasePrice = Number(document.getElementById('fPurchasePrice').value);
+      const sellingPrice = Number(document.getElementById('fSellingPrice').value);
+      const description = document.getElementById('fDescription').value.trim();
+      const isThirdParty = document.getElementById('fIsThirdParty').checked;
+      const supplierName = document.getElementById('fSupplierName').value.trim();
+      const supplierUpi = document.getElementById('fSupplierUpi').value.trim();
+      const supplierPhone = document.getElementById('fSupplierPhone').value.trim();
+      const oldOwnerName = document.getElementById('fOldOwnerName').value.trim();
+      const oldPurchase = Number(document.getElementById('fOldPurchasePrice').value) || 0;
+      const aadhar = document.getElementById('fAadhar').value.trim();
+      const qtyRaw = parseInt(document.getElementById('fQuantity').value) || 1;
+      const qty = Math.max(1, qtyRaw);
+
+      // Collect IMEI list
+      let imeiList = [];
+      if (qty === 1) {
+        const single = document.getElementById('fImei');
+        imeiList = [single ? single.value.trim() : ''];
+      } else {
+        for (let i = 1; i <= qty; i++) {
+          const el = document.getElementById(`fImei_${i}`);
+          imeiList.push(el ? el.value.trim() : '');
+        }
+      }
+
+      /* ── Validations ── */
+      if (!brand) { showErr('Please select a brand.'); return; }
+      if (!model) { showErr('Please enter the phone model.'); return; }
+      for (let i = 0; i < imeiList.length; i++) {
+        const label = qty > 1 ? `Phone ${i + 1} IMEI` : 'IMEI';
+        if (!/^\d{15}$/.test(imeiList[i])) {
+          showErr(`${label} must be exactly 15 digits (numbers only).`); return;
+        }
+      }
+      // Duplicate IMEIs within the form
+      const imeiSet = new Set(imeiList);
+      if (imeiSet.size !== imeiList.length) { showErr('Duplicate IMEI numbers found in the form.'); return; }
+      if (!purchasePrice || purchasePrice <= 0) { showErr('Enter a valid purchase price.'); return; }
+      if (!sellingPrice || sellingPrice <= 0) { showErr('Enter a valid selling price.'); return; }
+      if (isThirdParty && !supplierName) { showErr('Supplier name is required for third-party phones.'); return; }
+      if (isThirdParty && !supplierUpi) { showErr('Supplier UPI ID is required for third-party phones.'); return; }
+
+      /* ── Loading state ── */
+      submitBtn.disabled = true;
+      submitIcon.className = 'fas fa-spinner fa-spin';
+      submitTxt.textContent = qty > 1 ? `Adding ${qty} phones...` : 'Adding...';
+
+      try {
+        /* ── IMEI uniqueness check (all at once) ── */
+        for (const imei of imeiList) {
+          const imeiQ = query(collection(db, 'phones'), where('imei', '==', imei));
+          const imeiSnap = await getDocs(imeiQ);
+          if (!imeiSnap.empty) {
+            showErr(`A phone with IMEI ${imei} already exists in the system.`);
+            resetBtn(); return;
+          }
+        }
+
+        /* ── Third party: upsert supplier ── */
+        let thirdPersonId = null;
+        if (isThirdParty) {
+          if (supplierPhone) {
+            const tpQ = query(collection(db, 'thirdPersons'), where('phone', '==', supplierPhone));
+            const tpSnap = await getDocs(tpQ);
+            if (!tpSnap.empty) {
+              thirdPersonId = tpSnap.docs[0].id;
+              const existing = tpSnap.docs[0].data();
+              await updateDoc(doc(db, 'thirdPersons', thirdPersonId), {
+                phonesInStock: (existing.phonesInStock || 0) + qty,
+                upiId: supplierUpi,
+                name: supplierName
+              });
+            }
+          }
+          if (!thirdPersonId) {
+            const newTp = await addDoc(collection(db, 'thirdPersons'), {
+              name: supplierName,
+              upiId: supplierUpi,
+              phone: supplierPhone || '',
+              aadharNumber: '',
+              phonesInStock: qty,
+              totalSales: 0,
+              totalPaid: 0,
+              createdAt: serverTimestamp()
+            });
+            thirdPersonId = newTp.id;
+          }
+        }
+
+        /* ── Add one document per IMEI ── */
+        for (const imei of imeiList) {
+          const phoneData = {
+            brand, model, imei, ram, storage,
+            color: color || '',
+            purchasePrice, sellingPrice,
+            description: description || '',
+            isThirdParty,
+            thirdPersonId: thirdPersonId || null,
+            supplierName: isThirdParty ? supplierName : null,
+            supplierUpi: isThirdParty ? supplierUpi : null,
+            supplierPhone: isThirdParty ? supplierPhone : null,
+            oldOwnerName: oldOwnerName || '',
+            oldPurchasePrice: oldPurchase,
+            aadharNumber: aadhar || '',
+            status: 'Available',
+            addedBy: user.uid,
+            addedByName: user.displayName || user.email,
+            createdAt: serverTimestamp()
+          };
+          await addDoc(collection(db, 'phones'), phoneData);
+        }
+
+        /* ── Success ── */
+        const msg = qty > 1
+          ? `✅ ${qty} phones added to stock successfully!`
+          : '✅ Phone added to stock successfully!';
+        showToast(msg, 'success');
+        window.clearForm();
+
+      } catch (err) {
+        console.error('Error adding phone:', err);
+        showErr('Failed to add phone: ' + err.message);
+      }
+
+      resetBtn();
+    }
+
+    function showErr(msg) {
+      const el = document.getElementById('formError');
+      el.textContent = msg;
+      el.style.display = 'block';
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const submitBtn = document.getElementById('submitBtn');
+      const submitIcon = document.getElementById('submitIcon');
+      const submitTxt = document.getElementById('submitText');
+      submitBtn.disabled = false;
+      submitIcon.className = 'fas fa-plus';
+      submitTxt.textContent = 'Add to Stock';
+    }
+
+    function resetBtn() {
+      const submitBtn = document.getElementById('submitBtn');
+      const submitIcon = document.getElementById('submitIcon');
+      const submitTxt = document.getElementById('submitText');
+      submitBtn.disabled = false;
+      submitIcon.className = 'fas fa-plus';
+      submitTxt.textContent = 'Add to Stock';
+    }
+
+    function showToast(msg, type = 'success') {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText =
+          'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+        document.body.appendChild(container);
+      }
+      const t = document.createElement('div');
+      t.style.cssText = `
+      display:flex;align-items:center;gap:12px;padding:14px 18px;
+      background:#1E293B;color:#fff;border-radius:12px;min-width:280px;
+      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      border-left:4px solid ${type === 'success' ? '#10B981' : '#EF4444'};
+      font-family:Inter,sans-serif;font-size:14px;font-weight:500;`;
+      t.textContent = msg;
+      container.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3500);
+    }
+
+  </script>
+</body>
+
+</html>

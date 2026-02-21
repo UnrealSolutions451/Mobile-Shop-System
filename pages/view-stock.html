@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Stock — Max Mobile Shop</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-mobile-alt"></i></div>
+        <span class="sidebar-title">Max Mobile</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">staff</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item" data-page="dashboard" href="dashboard.html">
+          <i class="fas fa-th-large"></i><span>Dashboard</span>
+          <span class="nav-tooltip">Dashboard</span>
+        </a>
+        <a class="nav-item" data-page="add-phone" href="add-phone.html">
+          <i class="fas fa-plus-circle"></i><span>Add Phones</span>
+          <span class="nav-tooltip">Add Phones</span>
+        </a>
+        <a class="nav-item" data-page="view-stock" href="view-stock.html">
+          <i class="fas fa-boxes"></i><span>View All Stock</span>
+          <span class="nav-tooltip">View Stock</span>
+        </a>
+        <div class="nav-section-label">Sales</div>
+        <a class="nav-item" data-page="sales" href="sales.html">
+          <i class="fas fa-cash-register"></i><span>Sales / Billing</span>
+          <span class="nav-tooltip">Sales</span>
+        </a>
+        <a class="nav-item" data-page="sales-history" href="sales-history.html">
+          <i class="fas fa-history"></i><span>Sales History</span>
+          <span class="nav-tooltip">Sales History</span>
+        </a>
+        <div class="nav-section-label">Management</div>
+        <a class="nav-item" data-page="third-person" href="third-person.html">
+          <i class="fas fa-users"></i><span>Third Persons</span>
+          <span class="nav-tooltip">Third Persons</span>
+        </a>
+        <a class="nav-item admin-only" data-page="staff" href="staff-management.html">
+          <i class="fas fa-user-shield"></i><span>Staff Management</span>
+          <span class="nav-tooltip">Staff</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a class="nav-item" id="logoutBtn" href="#">
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <div class="main-content stock-page" id="mainContent">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button id="mobileToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="page-title">View All Stock</div>
+            <div class="breadcrumb"><i class="fas fa-home"></i> Inventory</div>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <span id="stockCount" class="badge badge-info" style="font-size:13px;padding:6px 14px;">0 phones</span>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="card">
+          <div class="toolbar">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Search brand, model, IMEI..." />
+            </div>
+            <select class="filter-select" id="brandFilter">
+              <option value="">All Brands</option>
+              <option>Samsung</option>
+              <option>Apple</option>
+              <option>Xiaomi</option>
+              <option>Realme</option>
+              <option>OnePlus</option>
+              <option>Vivo</option>
+            </select>
+            <select class="filter-select" id="ownerFilter">
+              <option value="">All Ownership</option>
+              <option value="shop">Shop Owned</option>
+              <option value="third">Third Party</option>
+            </select>
+            <button class="btn-primary btn-sm" onclick="applyFilters()">
+              <i class="fas fa-filter"></i> Filter
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table id="stockTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Brand</th>
+                  <th>Model</th>
+                  <th>IMEI</th>
+                  <th>RAM</th>
+                  <th>Storage</th>
+                  <th>Color</th>
+                  <th>Purchase</th>
+                  <th>Selling</th>
+                  <th>Supplier</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="stockBody">
+                <tr>
+                  <td colspan="11" style="text-align:center;padding:40px;color:#94A3B8;">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="toast-container"></div>
+
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { initSidebar } from '../js/sidebar.js';
+    import { db } from '../firebase-config.js';
+    import { formatCurrency } from '../js/utils.js';
+    import { collection, getDocs, orderBy, query } from
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    let allPhones = [];
+    let filtered = [];
+    const PAGE_SIZE = 15;
+    let currentPage = 1;
+
+    requireAuth(async (user) => {
+      initSidebar('view-stock');
+      const snap = await getDocs(query(collection(db, 'phones'), orderBy('createdAt', 'desc')));
+      allPhones = [];
+      snap.forEach(d => allPhones.push({ id: d.id, ...d.data() }));
+      filtered = allPhones.filter(p => p.status === 'Available');
+      renderTable();
+
+      document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
+    });
+
+    window.applyFilters = function () {
+      const term = document.getElementById('searchInput').value.trim().toLowerCase();
+      const brand = document.getElementById('brandFilter').value;
+      const owner = document.getElementById('ownerFilter').value;
+      filtered = allPhones.filter(p => {
+        if (p.status !== 'Available') return false;
+        if (brand && p.brand !== brand) return false;
+        if (owner === 'shop' && p.isThirdParty) return false;
+        if (owner === 'third' && !p.isThirdParty) return false;
+        if (term && !(p.brand?.toLowerCase().includes(term) ||
+          p.model?.toLowerCase().includes(term) ||
+          p.imei?.includes(term))) return false;
+        return true;
+      });
+      currentPage = 1;
+      renderTable();
+    };
+
+    function renderTable() {
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page = filtered.slice(start, start + PAGE_SIZE);
+      const tbody = document.getElementById('stockBody');
+      document.getElementById('stockCount').textContent = `${filtered.length} phones`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#94A3B8;">No phones found</td></tr>';
+        document.getElementById('pagination').innerHTML = '';
+        return;
+      }
+
+      tbody.innerHTML = page.map((p, i) => `
+      <tr>
+        <td style="color:#94A3B8;font-size:12px;">${start + i + 1}</td>
+        <td><strong>${p.brand}</strong></td>
+        <td>${p.model}</td>
+        <td style="font-family:monospace;font-size:12px;">${p.imei}</td>
+        <td>${p.ram}</td>
+        <td>${p.storage}</td>
+        <td>${p.color || '—'}</td>
+        <td style="color:#64748B;">${formatCurrency(p.purchasePrice)}</td>
+        <td style="font-weight:700;color:#4F46E5;">${formatCurrency(p.sellingPrice)}</td>
+        <td>${p.isThirdParty ?
+          `<span class="badge badge-warning">${p.supplierName}</span>` :
+          '<span class="badge badge-info">Shop</span>'}
+        </td>
+        <td><span class="badge badge-success"><i class="fas fa-circle" style="font-size:8px;"></i> Available</span></td>
+      </tr>
+    `).join('');
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const total = Math.ceil(filtered.length / PAGE_SIZE);
+      if (total <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+      let html = `<div class="page-info">Showing ${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filtered.length)} of ${filtered.length}</div>
+      <div class="page-btns">
+        <button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || Math.abs(i - currentPage) <= 1)
+          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+        else if (Math.abs(i - currentPage) === 2) html += '<span style="padding:6px 4px;color:#94A3B8;">...</span>';
+      }
+      html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button></div>`;
+      document.getElementById('pagination').innerHTML = html;
+    }
+
+    window.goPage = function (p) {
+      if (p < 1 || p > Math.ceil(filtered.length / PAGE_SIZE)) return;
+      currentPage = p; renderTable();
+    };
+
+    function debounce(fn, d) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); }; }
+  </script>
+</body>
+
+</html>

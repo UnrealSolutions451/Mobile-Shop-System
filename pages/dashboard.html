@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Max Mobile Shop</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+  <!-- SIDEBAR -->
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-mobile-alt"></i></div>
+        <span class="sidebar-title">Max Mobile</span>
+        <button class="sidebar-toggle" id="sidebarToggle" style="display:none;"><i class="fas fa-bars"></i></button>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">admin</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item" data-page="dashboard" href="dashboard.html">
+          <i class="fas fa-th-large"></i><span>Dashboard</span>
+          <span class="nav-tooltip">Dashboard</span>
+        </a>
+        <a class="nav-item" data-page="add-phone" href="add-phone.html">
+          <i class="fas fa-plus-circle"></i><span>Add Phones</span>
+          <span class="nav-tooltip">Add Phones</span>
+        </a>
+        <a class="nav-item" data-page="view-stock" href="view-stock.html">
+          <i class="fas fa-boxes"></i><span>View All Stock</span>
+          <span class="nav-tooltip">View Stock</span>
+        </a>
+        <div class="nav-section-label">Sales</div>
+        <a class="nav-item" data-page="sales" href="sales.html">
+          <i class="fas fa-cash-register"></i><span>Sales / Billing</span>
+          <span class="nav-tooltip">Sales</span>
+        </a>
+        <a class="nav-item" data-page="sales-history" href="sales-history.html">
+          <i class="fas fa-history"></i><span>Sales History</span>
+          <span class="nav-tooltip">Sales History</span>
+        </a>
+        <div class="nav-section-label">Management</div>
+        <a class="nav-item" data-page="third-person" href="third-person.html">
+          <i class="fas fa-users"></i><span>Third Persons</span>
+          <span class="nav-tooltip">Third Persons</span>
+        </a>
+        <a class="nav-item admin-only" data-page="staff" href="staff-management.html">
+          <i class="fas fa-user-shield"></i><span>Staff Management</span>
+          <span class="nav-tooltip">Staff</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a class="nav-item" id="logoutBtn" href="#">
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+          <span class="nav-tooltip">Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-content" id="mainContent">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button id="mobileToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="page-title">Dashboard</div>
+            <div class="breadcrumb"><i class="fas fa-home"></i> Home</div>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <div class="top-bar-date" id="topBarDate"></div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <!-- TODAY STATS -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card blue">
+            <div class="stat-icon"><i class="fas fa-mobile-alt"></i></div>
+            <div class="stat-label">Units Sold Today</div>
+            <div class="stat-value" id="unitsSoldToday">0</div>
+            <div class="stat-sub">Phones sold</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="stat-label">Cash Collected Today</div>
+            <div class="stat-value" id="cashToday">₹0</div>
+            <div class="stat-sub">Physical cash</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon"><i class="fas fa-qrcode"></i></div>
+            <div class="stat-label">Online/UPI Today</div>
+            <div class="stat-value" id="upiToday">₹0</div>
+            <div class="stat-sub">Digital payments</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-label">Total Revenue Today</div>
+            <div class="stat-value" id="revenueToday">₹0</div>
+            <div class="stat-sub">All payments combined</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+            <div class="stat-label">Total Stock</div>
+            <div class="stat-value" id="totalStock">0</div>
+            <div class="stat-sub">Available phones</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+          <!-- Third Party Summary -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Third Party Balance</div>
+                <div class="card-subtitle">Outstanding balances</div>
+              </div>
+              <a href="third-person.html" class="btn-secondary btn-sm">View All</a>
+            </div>
+            <div id="thirdPartyList">
+              <div style="text-align:center;padding:24px;color:#94A3B8;">Loading...</div>
+            </div>
+          </div>
+
+          <!-- Recent Sales -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Recent Sales</div>
+                <div class="card-subtitle">Last 5 transactions</div>
+              </div>
+              <a href="sales-history.html" class="btn-secondary btn-sm">View All</a>
+            </div>
+            <div id="recentSalesList">
+              <div style="text-align:center;padding:24px;color:#94A3B8;">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Sales This Week</div>
+          </div>
+          <canvas id="salesChart" height="80"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { initSidebar } from '../js/sidebar.js';
+    import { db } from '../firebase-config.js';
+    import { formatCurrency, formatDateTime } from '../js/utils.js';
+    import {
+      collection, query, where, getDocs, orderBy, limit, Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    requireAuth(async (user) => {
+      initSidebar('dashboard');
+      document.getElementById('topBarDate').textContent =
+        new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+
+      // Load today's sales
+      const salesQ = query(
+        collection(db, 'sales'),
+        where('createdAt', '>=', Timestamp.fromDate(todayStart)),
+        where('createdAt', '<=', Timestamp.fromDate(todayEnd))
+      );
+      const salesSnap = await getDocs(salesQ);
+      let unitsSold = 0, cashTotal = 0, upiTotal = 0, cardTotal = 0;
+      salesSnap.forEach(d => {
+        const s = d.data();
+        unitsSold++;
+        cashTotal += s.payments?.cash || 0;
+        upiTotal += s.payments?.upi || 0;
+        cardTotal += s.payments?.card || 0;
+      });
+      const totalRev = cashTotal + upiTotal + cardTotal;
+      document.getElementById('unitsSoldToday').textContent = unitsSold;
+      document.getElementById('cashToday').textContent = formatCurrency(cashTotal);
+      document.getElementById('upiToday').textContent = formatCurrency(upiTotal);
+      document.getElementById('revenueToday').textContent = formatCurrency(totalRev);
+
+      // Stock count
+      const stockQ = query(collection(db, 'phones'), where('status', '==', 'Available'));
+      const stockSnap = await getDocs(stockQ);
+      document.getElementById('totalStock').textContent = stockSnap.size;
+
+      // Third party balances
+      const tpSnap = await getDocs(collection(db, 'thirdPersons'));
+      const tpList = document.getElementById('thirdPartyList');
+      if (tpSnap.empty) {
+        tpList.innerHTML = '<div style="text-align:center;padding:24px;color:#94A3B8;">No suppliers yet</div>';
+      } else {
+        let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+        tpSnap.forEach(d => {
+          const tp = d.data();
+          const bal = (tp.totalSales || 0) - (tp.totalPaid || 0);
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#F8FAFC;border-radius:8px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1E293B;">${tp.name}</div>
+            <div style="font-size:11px;color:#94A3B8;">${tp.phonesInStock || 0} phones in stock</div>
+          </div>
+          <div>
+            <span class="badge ${bal > 0 ? 'badge-warning' : 'badge-success'}">${formatCurrency(bal)}</span>
+          </div>
+        </div>`;
+        });
+        html += '</div>';
+        tpList.innerHTML = html;
+      }
+
+      // Recent sales
+      const recentQ = query(collection(db, 'sales'), orderBy('createdAt', 'desc'), limit(5));
+      const recentSnap = await getDocs(recentQ);
+      const rList = document.getElementById('recentSalesList');
+      if (recentSnap.empty) {
+        rList.innerHTML = '<div style="text-align:center;padding:24px;color:#94A3B8;">No sales yet</div>';
+      } else {
+        let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+        recentSnap.forEach(d => {
+          const s = d.data();
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#F8FAFC;border-radius:8px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1E293B;">${s.brand} ${s.model}</div>
+            <div style="font-size:11px;color:#94A3B8;">${s.customerName} • ${formatDateTime(s.createdAt)}</div>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:#10B981;">${formatCurrency(s.totalPaid)}</div>
+        </div>`;
+        });
+        html += '</div>';
+        rList.innerHTML = html;
+      }
+
+      // Weekly chart (last 7 days)
+      const days = [];
+      const dayLabels = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        days.push(d);
+        dayLabels.push(d.toLocaleDateString('en-IN', { weekday: 'short' }));
+      }
+      const dayRevenues = new Array(7).fill(0);
+      const allSalesQ = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
+      const allSnap = await getDocs(allSalesQ);
+      allSnap.forEach(d => {
+        const s = d.data();
+        const dt = s.createdAt?.toDate ? s.createdAt.toDate() : new Date(s.createdAt);
+        days.forEach((day, i) => {
+          if (dt.toDateString() === day.toDateString()) {
+            dayRevenues[i] += s.totalPaid || 0;
+          }
+        });
+      });
+      new Chart(document.getElementById('salesChart'), {
+        type: 'bar',
+        data: {
+          labels: dayLabels,
+          datasets: [{
+            label: 'Revenue (₹)',
+            data: dayRevenues,
+            backgroundColor: 'rgba(79,70,229,.2)',
+            borderColor: 'rgba(79,70,229,1)',
+            borderWidth: 2, borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true, grid: { color: '#F1F5F9' },
+              ticks: { callback: v => '₹' + v.toLocaleString('en-IN') }
+            },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

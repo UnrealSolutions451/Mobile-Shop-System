@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales History — Max Mobile Shop</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-mobile-alt"></i></div>
+        <span class="sidebar-title">Max Mobile</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">staff</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item" data-page="dashboard" href="dashboard.html">
+          <i class="fas fa-th-large"></i><span>Dashboard</span>
+          <span class="nav-tooltip">Dashboard</span>
+        </a>
+        <a class="nav-item" data-page="add-phone" href="add-phone.html">
+          <i class="fas fa-plus-circle"></i><span>Add Phones</span>
+          <span class="nav-tooltip">Add Phones</span>
+        </a>
+        <a class="nav-item" data-page="view-stock" href="view-stock.html">
+          <i class="fas fa-boxes"></i><span>View All Stock</span>
+          <span class="nav-tooltip">View Stock</span>
+        </a>
+        <div class="nav-section-label">Sales</div>
+        <a class="nav-item" data-page="sales" href="sales.html">
+          <i class="fas fa-cash-register"></i><span>Sales / Billing</span>
+          <span class="nav-tooltip">Sales</span>
+        </a>
+        <a class="nav-item" data-page="sales-history" href="sales-history.html">
+          <i class="fas fa-history"></i><span>Sales History</span>
+          <span class="nav-tooltip">Sales History</span>
+        </a>
+        <div class="nav-section-label">Management</div>
+        <a class="nav-item" data-page="third-person" href="third-person.html">
+          <i class="fas fa-users"></i><span>Third Persons</span>
+          <span class="nav-tooltip">Third Persons</span>
+        </a>
+        <a class="nav-item admin-only" data-page="staff" href="staff-management.html">
+          <i class="fas fa-user-shield"></i><span>Staff Management</span>
+          <span class="nav-tooltip">Staff</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a class="nav-item" id="logoutBtn" href="#">
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <div class="main-content history-page" id="mainContent">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button id="mobileToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="page-title">Sales History</div>
+            <div class="breadcrumb"><i class="fas fa-home"></i> Transactions</div>
+          </div>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="card">
+          <div class="toolbar">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Search customer, model, IMEI, bill no..." />
+            </div>
+            <input type="date" class="filter-select" id="dateFrom" placeholder="From" />
+            <input type="date" class="filter-select" id="dateTo" placeholder="To" />
+            <button class="btn-primary btn-sm" onclick="applyFilters()">
+              <i class="fas fa-filter"></i> Filter
+            </button>
+            <button class="btn-secondary btn-sm" onclick="clearFilters()">
+              <i class="fas fa-times"></i> Clear
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bill #</th>
+                  <th>Date & Time</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>IMEI</th>
+                  <th>Amount</th>
+                  <th>Cash</th>
+                  <th>UPI</th>
+                  <th>Card</th>
+                  <th>Exchange</th>
+                  <th>Staff</th>
+                </tr>
+              </thead>
+              <tbody id="salesBody">
+                <tr>
+                  <td colspan="11" style="text-align:center;padding:40px;color:#94A3B8;">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="toast-container"></div>
+
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { initSidebar } from '../js/sidebar.js';
+    import { db } from '../firebase-config.js';
+    import { formatCurrency, formatDateTime } from '../js/utils.js';
+    import { collection, getDocs, orderBy, query } from
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    let allSales = []; let filtered = [];
+    const PAGE_SIZE = 10; let currentPage = 1;
+
+    requireAuth(async (user) => {
+      initSidebar('sales-history');
+      const snap = await getDocs(query(collection(db, 'sales'), orderBy('createdAt', 'desc')));
+      allSales = []; snap.forEach(d => allSales.push({ id: d.id, ...d.data() }));
+      filtered = [...allSales];
+      renderTable();
+
+      document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
+    });
+
+    window.applyFilters = function () {
+      const term = document.getElementById('searchInput').value.trim().toLowerCase();
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+      filtered = allSales.filter(s => {
+        if (term && !(s.customerName?.toLowerCase().includes(term) ||
+          s.model?.toLowerCase().includes(term) ||
+          s.imei?.includes(term) ||
+          s.billNumber?.toLowerCase().includes(term))) return false;
+        const dt = s.createdAt?.toDate?.() || new Date();
+        if (dateFrom && dt < new Date(dateFrom)) return false;
+        if (dateTo && dt > new Date(dateTo + 'T23:59:59')) return false;
+        return true;
+      });
+      currentPage = 1; renderTable();
+    };
+
+    window.clearFilters = function () {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      filtered = [...allSales]; currentPage = 1; renderTable();
+    };
+
+    function renderTable() {
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page = filtered.slice(start, start + PAGE_SIZE);
+      const tbody = document.getElementById('salesBody');
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#94A3B8;">No sales found</td></tr>';
+        return;
+      }
+      tbody.innerHTML = page.map(s => `
+      <tr>
+        <td><span class="badge badge-purple">${s.billNumber}</span></td>
+        <td style="font-size:12px;">${formatDateTime(s.createdAt)}</td>
+        <td>
+          <div style="font-weight:600;">${s.customerName}</div>
+          <div style="font-size:11px;color:#94A3B8;">${s.customerMobile}</div>
+        </td>
+        <td><strong>${s.brand} ${s.model}</strong></td>
+        <td style="font-family:monospace;font-size:12px;">${s.imei}</td>
+        <td style="font-weight:700;color:#10B981;">${formatCurrency(s.totalPaid)}</td>
+        <td>${s.payments?.cash > 0 ? formatCurrency(s.payments.cash) : '—'}</td>
+        <td>${s.payments?.upi > 0 ? formatCurrency(s.payments.upi) : '—'}</td>
+        <td>${s.payments?.card > 0 ? formatCurrency(s.payments.card) : '—'}</td>
+        <td>${s.exchangeData?.brand ? `<span class="badge badge-warning">${s.exchangeData.brand} ${s.exchangeData.model}</span>` : '—'}</td>
+        <td style="font-size:12px;color:#64748B;">${s.soldByName || s.soldBy}</td>
+      </tr>
+    `).join('');
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const total = Math.ceil(filtered.length / PAGE_SIZE);
+      if (total <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+      let html = `<div class="page-info">${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filtered.length)} of ${filtered.length}</div>
+      <div class="page-btns">
+        <button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || Math.abs(i - currentPage) <= 1)
+          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+        else if (Math.abs(i - currentPage) === 2) html += '<span>...</span>';
+      }
+      html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button></div>`;
+      document.getElementById('pagination').innerHTML = html;
+    }
+
+    window.goPage = function (p) {
+      if (p < 1 || p > Math.ceil(filtered.length / PAGE_SIZE)) return;
+      currentPage = p; renderTable();
+    };
+
+    function debounce(fn, d) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); }; }
+  </script>
+</body>
+
+</html>

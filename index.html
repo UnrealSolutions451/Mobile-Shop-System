@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — Max Mobile Shop</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body class="login-body">
+
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon"><i class="fas fa-mobile-alt"></i></div>
+        <h1>Max Mobile Shop</h1>
+        <p>Smart Management System</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label><i class="fas fa-envelope"></i> Email Address</label>
+          <input type="email" id="loginEmail" placeholder="admin@maxmobile.com" required />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-lock"></i> Password</label>
+          <div class="password-wrap">
+            <input type="password" id="loginPassword" placeholder="••••••••" required />
+            <button type="button" class="toggle-pass" onclick="togglePassword()">
+              <i class="fas fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+        <div id="loginError" class="error-msg" style="display:none;"></div>
+        <button type="submit" class="btn-primary btn-full" id="loginBtn">
+          <span id="loginText">Sign In</span>
+          <span id="loginSpinner" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+        </button>
+      </form>
+
+      <p class="login-footer">© 2024 Max Mobile Shop · All Rights Reserved</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth } from './firebase-config.js';
+    import { signInWithEmailAndPassword, onAuthStateChanged } from
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { db } from './firebase-config.js';
+    import { doc, getDoc } from
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Redirect if already logged in
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (snap.exists() && snap.data().isActive) {
+          window.location.href = 'pages/dashboard.html';
+        }
+      }
+    });
+
+    window.togglePassword = function() {
+      const inp = document.getElementById('loginPassword');
+      const icon = document.getElementById('eyeIcon');
+      if (inp.type === 'password') {
+        inp.type = 'text'; icon.className = 'fas fa-eye-slash';
+      } else {
+        inp.type = 'password'; icon.className = 'fas fa-eye';
+      }
+    };
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass  = document.getElementById('loginPassword').value;
+      const errEl = document.getElementById('loginError');
+      const btn   = document.getElementById('loginBtn');
+      const txt   = document.getElementById('loginText');
+      const spin  = document.getElementById('loginSpinner');
+
+      txt.style.display = 'none'; spin.style.display = 'inline';
+      btn.disabled = true; errEl.style.display = 'none';
+
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        const snap = await getDoc(doc(db, 'users', cred.user.uid));
+        if (!snap.exists() || !snap.data().isActive) {
+          await auth.signOut();
+          throw new Error('Account disabled. Contact admin.');
+        }
+        window.location.href = 'pages/dashboard.html';
+      } catch (err) {
+        errEl.textContent = err.message.includes('auth/') ?
+          'Invalid email or password.' : err.message;
+        errEl.style.display = 'block';
+        txt.style.display = 'inline'; spin.style.display = 'none';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

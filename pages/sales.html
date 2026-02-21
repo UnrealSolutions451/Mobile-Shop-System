@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales / Billing — Max Mobile Shop</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- QR Code & PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    /* Sales-specific overrides */
+    .phone-result-row {
+      transition: all .15s ease;
+    }
+
+    .phone-result-row:hover {
+      border-color: #4F46E5 !important;
+      background: #F5F3FF !important;
+      transform: translateX(2px);
+    }
+
+    .phone-result-row.selected-row {
+      border-color: #10B981 !important;
+      background: #ECFDF5 !important;
+    }
+
+    .bill-section {
+      position: sticky;
+      top: 80px;
+    }
+
+    @media(max-width:900px) {
+      .sales-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .bill-section {
+        position: static;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+  <div class="app-layout">
+
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-mobile-alt"></i></div>
+        <span class="sidebar-title">Max Mobile</span>
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">staff</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item" data-page="dashboard" href="dashboard.html">
+          <i class="fas fa-th-large"></i><span>Dashboard</span>
+          <span class="nav-tooltip">Dashboard</span>
+        </a>
+        <a class="nav-item" data-page="add-phone" href="add-phone.html">
+          <i class="fas fa-plus-circle"></i><span>Add Phones</span>
+          <span class="nav-tooltip">Add Phones</span>
+        </a>
+        <a class="nav-item" data-page="view-stock" href="view-stock.html">
+          <i class="fas fa-boxes"></i><span>View All Stock</span>
+          <span class="nav-tooltip">View Stock</span>
+        </a>
+        <div class="nav-section-label">Sales</div>
+        <a class="nav-item" data-page="sales" href="sales.html">
+          <i class="fas fa-cash-register"></i><span>Sales / Billing</span>
+          <span class="nav-tooltip">Sales</span>
+        </a>
+        <a class="nav-item" data-page="sales-history" href="sales-history.html">
+          <i class="fas fa-history"></i><span>Sales History</span>
+          <span class="nav-tooltip">Sales History</span>
+        </a>
+        <div class="nav-section-label">Management</div>
+        <a class="nav-item" data-page="third-person" href="third-person.html">
+          <i class="fas fa-users"></i><span>Third Persons</span>
+          <span class="nav-tooltip">Third Persons</span>
+        </a>
+        <a class="nav-item admin-only" data-page="staff" href="staff-management.html">
+          <i class="fas fa-user-shield"></i><span>Staff Management</span>
+          <span class="nav-tooltip">Staff</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a class="nav-item" id="logoutBtn" href="#">
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </a>
+      </div>
+    </aside>
+    <!-- ═══════════════ END SIDEBAR ═══════════════ -->
+
+    <div class="main-content" id="mainContent">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button id="mobileToggle"
+            style="display:flex;align-items:center;background:none;border:none;font-size:20px;color:#475569;cursor:pointer;padding:4px;">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="page-title">Sales / Billing</div>
+            <div class="breadcrumb"><i class="fas fa-home"></i> New Sale</div>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <span id="availableCount" class="badge badge-success" style="font-size:13px;padding:6px 14px;">
+            <i class="fas fa-mobile-alt"></i> Loading...
+          </span>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="sales-grid" style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start;">
+
+          <!-- ══════════ LEFT PANEL ══════════ -->
+          <div>
+
+            <!-- STEP 1: Phone Search -->
+            <div class="card">
+              <div class="card-header" style="margin-bottom:16px;">
+                <div>
+                  <div class="card-title">
+                    <i class="fas fa-search" style="color:#4F46E5;margin-right:8px;"></i>
+                    Step 1 — Select Phone
+                  </div>
+                  <div class="card-subtitle" id="phoneCountLabel">Loading available stock...</div>
+                </div>
+              </div>
+
+              <div class="search-box" style="margin-bottom:12px;">
+                <i class="fas fa-search"></i>
+                <input type="text" id="phoneSearch" placeholder="Search by brand, model or IMEI..."
+                  oninput="filterPhones(this.value)" />
+              </div>
+
+              <!-- Phone list -->
+              <div id="phoneListWrap" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;
+                padding-right:4px;margin-top:4px;">
+                <div id="phoneLoadingMsg" style="text-align:center;padding:32px;color:#94A3B8;">
+                  <i class="fas fa-spinner fa-spin" style="font-size:22px;display:block;margin-bottom:10px;"></i>
+                  Fetching available phones...
+                </div>
+              </div>
+            </div>
+
+            <!-- Selected Phone Card -->
+            <div class="card" id="selectedPhoneCard" style="display:none;border:2px solid #10B981;background:#ECFDF5;">
+              <div class="card-header" style="margin-bottom:12px;">
+                <div class="card-title" style="color:#059669;">
+                  <i class="fas fa-check-circle"></i>&nbsp; Phone Selected
+                </div>
+                <button class="btn-danger btn-sm" onclick="clearSelectedPhone()">
+                  <i class="fas fa-times"></i> Change
+                </button>
+              </div>
+              <div id="selectedPhoneDetails"
+                style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:16px;">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label style="color:#374151;font-weight:700;">
+                  <i class="fas fa-rupee-sign" style="color:#4F46E5;"></i>
+                  Selling Price (₹) — Edit if needed
+                </label>
+                <input type="number" id="finalSellingPrice"
+                  style="font-size:22px;font-weight:800;color:#4F46E5;border:2px solid #4F46E5;"
+                  oninput="recalcTotal()" />
+              </div>
+            </div>
+
+            <!-- STEP 2: Customer Details -->
+            <div class="card">
+              <div class="card-header" style="margin-bottom:16px;">
+                <div class="card-title">
+                  <i class="fas fa-user" style="color:#4F46E5;margin-right:8px;"></i>
+                  Step 2 — Customer Details
+                </div>
+              </div>
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label><i class="fas fa-user"></i> Customer Name *</label>
+                  <input type="text" id="customerName" placeholder="Full name" />
+                </div>
+                <div class="form-group">
+                  <label><i class="fas fa-phone"></i> Mobile Number *</label>
+                  <input type="tel" id="customerMobile" placeholder="10-digit number" maxlength="10" />
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 3: Exchange -->
+            <div class="card">
+              <div class="card-header" style="margin-bottom:12px;">
+                <div>
+                  <div class="card-title">
+                    <i class="fas fa-exchange-alt" style="color:#F59E0B;margin-right:8px;"></i>
+                    Step 3 — Exchange (Optional)
+                  </div>
+                  <div class="card-subtitle">Customer trades in their old phone</div>
+                </div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;
+                font-size:13px;font-weight:600;color:#374151;">
+                  <input type="checkbox" id="enableExchange"
+                    style="width:18px;height:18px;accent-color:#F59E0B;cursor:pointer;"
+                    onchange="toggleExchange(this.checked)" />
+                  Enable Exchange
+                </label>
+              </div>
+
+              <div id="exchangeSection" style="display:none;">
+                <div style="background:#FEF3C7;border:2px solid #F59E0B;border-radius:12px;padding:18px;">
+                  <div style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:14px;">
+                    <i class="fas fa-mobile-alt"></i>&nbsp; Exchange Phone Details
+                  </div>
+                  <div class="form-row cols-2">
+                    <div class="form-group">
+                      <label>Brand</label>
+                      <input type="text" id="exBrand" placeholder="e.g. Samsung" />
+                    </div>
+                    <div class="form-group">
+                      <label>Model</label>
+                      <input type="text" id="exModel" placeholder="e.g. Galaxy A32" />
+                    </div>
+                  </div>
+                  <div class="form-row cols-3">
+                    <div class="form-group">
+                      <label>IMEI</label>
+                      <input type="text" id="exImei" placeholder="15 digits" maxlength="15" />
+                    </div>
+                    <div class="form-group">
+                      <label>RAM</label>
+                      <select id="exRam">
+                        <option value="">— Select RAM —</option>
+                        <option>4 GB</option>
+                        <option>6 GB</option>
+                        <option>8 GB</option>
+                        <option>12 GB</option>
+                        <option>16 GB</option>
+
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Storage</label>
+                      <select id="exStorage">
+                        <option value="">— Select RAM —</option>
+                        <option>32 GB</option>
+                        <option>64 GB</option>
+                        <option>128 GB</option>
+                        <option>256 GB</option>
+                        <option>1 TB</option>
+                        <option>2 TB</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-row cols-2">
+                    <div class="form-group">
+                      <label>Color</label>
+                      <input type="text" id="exColor" placeholder="e.g. Black" />
+                    </div>
+                    <div class="form-group">
+                      <label style="color:#92400E;font-weight:700;">
+                        Exchange Value (₹) — subtracts from total
+                      </label>
+                      <input type="number" id="exValue" placeholder="0" min="0"
+                        style="border-color:#F59E0B;font-weight:700;" oninput="recalcTotal()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <!-- ══════════ END LEFT PANEL ══════════ -->
+
+          <!-- ══════════ RIGHT: BILL SUMMARY ══════════ -->
+          <div class="bill-section">
+            <div class="card" style="border:2px solid #E0E7FF;">
+
+              <div class="card-header" style="margin-bottom:16px;">
+                <div class="card-title">
+                  <i class="fas fa-receipt" style="color:#4F46E5;margin-right:8px;"></i>
+                  Bill Summary
+                </div>
+              </div>
+
+              <!-- Price breakdown -->
+              <div style="background:#F8FAFC;border-radius:10px;padding:16px;margin-bottom:16px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                  <span style="font-size:13px;color:#64748B;">Selling Price</span>
+                  <span style="font-size:13px;font-weight:600;color:#1E293B;" id="billSelling">₹0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;" id="billExchangeRow"
+                  style="display:none;">
+                  <span style="font-size:13px;color:#F59E0B;">
+                    <i class="fas fa-exchange-alt"></i> Exchange Value
+                  </span>
+                  <span style="font-size:13px;font-weight:600;color:#F59E0B;" id="billExchange">−₹0</span>
+                </div>
+                <div style="border-top:2px dashed #E2E8F0;margin:10px 0;"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:14px;font-weight:700;color:#1E293B;">Total Payable</span>
+                  <span style="font-size:22px;font-weight:800;color:#4F46E5;" id="billTotal">₹0</span>
+                </div>
+              </div>
+
+              <!-- Payment Methods -->
+              <div style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;
+                letter-spacing:.5px;margin-bottom:12px;">
+                  <i class="fas fa-credit-card" style="color:#4F46E5;margin-right:6px;"></i>
+                  Payment Breakdown
+                </div>
+
+                <!-- Cash -->
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
+                background:#F0FDF4;border-radius:8px;margin-bottom:8px;border:1.5px solid #D1FAE5;">
+                  <span style="font-size:20px;">💵</span>
+                  <span style="font-size:13px;font-weight:600;color:#374151;min-width:60px;">Cash</span>
+                  <input type="number" id="payCash" value="0" min="0" style="flex:1;padding:7px 10px;border:1.5px solid #D1FAE5;border-radius:6px;
+                    font-size:14px;font-weight:700;color:#065F46;outline:none;" oninput="recalcPayments()" />
+                </div>
+
+                <!-- UPI -->
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
+                background:#EEF2FF;border-radius:8px;margin-bottom:8px;border:1.5px solid #C7D2FE;">
+                  <span style="font-size:20px;">📱</span>
+                  <span style="font-size:13px;font-weight:600;color:#374151;min-width:60px;">UPI</span>
+                  <input type="number" id="payUpi" value="0" min="0" style="flex:1;padding:7px 10px;border:1.5px solid #C7D2FE;border-radius:6px;
+                    font-size:14px;font-weight:700;color:#4338CA;outline:none;"
+                    oninput="recalcPayments(); updateQR();" />
+                </div>
+
+                <!-- Card -->
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
+                background:#FFF7ED;border-radius:8px;border:1.5px solid #FED7AA;">
+                  <span style="font-size:20px;">💳</span>
+                  <span style="font-size:13px;font-weight:600;color:#374151;min-width:60px;">Card</span>
+                  <input type="number" id="payCard" value="0" min="0" style="flex:1;padding:7px 10px;border:1.5px solid #FED7AA;border-radius:6px;
+                    font-size:14px;font-weight:700;color:#9A3412;outline:none;" oninput="recalcPayments()" />
+                </div>
+
+                <!-- Total paid / remaining -->
+                <div style="display:flex;justify-content:space-between;align-items:center;
+                padding:12px 14px;background:#EEF2FF;border-radius:8px;margin-top:10px;">
+                  <span style="font-size:13px;font-weight:600;color:#4338CA;">Amount Paid</span>
+                  <span style="font-size:16px;font-weight:800;color:#4F46E5;" id="paidTotal">₹0</span>
+                </div>
+                <div id="remainingBar" style="display:none;justify-content:space-between;align-items:center;
+                padding:10px 14px;background:#FEE2E2;border-radius:8px;margin-top:6px;">
+                  <span style="font-size:13px;font-weight:600;color:#991B1B;">
+                    <i class="fas fa-exclamation-circle"></i> Remaining
+                  </span>
+                  <span style="font-size:15px;font-weight:800;color:#DC2626;" id="remaining">₹0</span>
+                </div>
+              </div>
+
+              <!-- UPI QR Code -->
+              <div id="qrSection" style="display:none;margin-bottom:16px;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:10px;
+                padding:18px;background:#F8FAFC;border-radius:10px;
+                border:2px dashed #C7D2FE;">
+                  <div style="font-size:13px;font-weight:700;color:#4F46E5;" id="qrTitle">
+                    Scan to Pay via UPI
+                  </div>
+                  <div id="qrCode"></div>
+                  <div style="font-size:11px;color:#64748B;text-align:center;" id="qrUpiLabel"></div>
+                </div>
+              </div>
+
+              <!-- Error -->
+              <div id="saleError" class="error-msg" style="display:none;margin-bottom:12px;"></div>
+
+              <!-- Complete Sale Button -->
+              <button class="btn-primary btn-full" id="completeSaleBtn" onclick="completeSale()"
+                style="font-size:15px;padding:14px;">
+                <i class="fas fa-check-circle" id="completeIcon"></i>
+                <span id="completeText">Complete Sale & Print Bill</span>
+              </button>
+            </div>
+          </div>
+          <!-- ══════════ END RIGHT PANEL ══════════ -->
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module">
+
+    import { initializeApp, getApps }
+      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signOut }
+      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection, getDocs, addDoc, updateDoc,
+      doc, getDoc, setDoc, serverTimestamp, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVu8nlzm3HLuZBFY479PvK3RACza0aIrg",
+      authDomain: "maxmobileshop-c63f6.firebaseapp.com",
+      projectId: "maxmobileshop-c63f6",
+      storageBucket: "maxmobileshop-c63f6.firebasestorage.app",
+      messagingSenderId: "208284587491",
+      appId: "1:208284587491:web:16723255b585e4ab2c3cd6"
+    };
+
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    /* ── Session-based auth (no onAuthStateChanged = no logout on staff creation) ── */
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (!storedUser) { window.location.href = '../index.html'; throw new Error('Not auth'); }
+    const currentUser = JSON.parse(storedUser);
+
+    let allAvailablePhones = [];   // master list loaded once
+    let selectedPhone = null;
+    let shopSettings = null;
+
+    /* ── Init ── */
+    initSidebar(currentUser);
+    await loadEverything();
+
+    async function loadEverything() {
+      // Load shop settings (for shop UPI)
+      try {
+        const settSnap = await getDoc(doc(db, 'settings', 'shop'));
+        if (settSnap.exists()) shopSettings = settSnap.data();
+      } catch (e) { /* optional — no redirect */ }
+
+      await loadAvailablePhones();
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       FIX: Do NOT use where('status','==','Available')
+       Reason: That query requires a Firestore composite index which
+       may not exist in a new project, causing a silent permission /
+       index error — the getDocs resolves empty or throws.
+  
+       Solution: Fetch ALL phones (no where clause), then filter
+       client-side. This works without any index configuration.
+    ───────────────────────────────────────────────────────────────── */
+    async function loadAvailablePhones() {
+      const wrap = document.getElementById('phoneListWrap');
+      const msgEl = document.getElementById('phoneLoadingMsg');
+      const cntEl = document.getElementById('availableCount');
+      const lblEl = document.getElementById('phoneCountLabel');
+
+      try {
+        // Fetch everything — no where clause, no index needed
+        const snap = await getDocs(collection(db, 'phones'));
+
+        allAvailablePhones = [];
+        snap.forEach(d => {
+          const data = d.data();
+          // Filter available phones client-side
+          if (data.status === 'Available') {
+            allAvailablePhones.push({ id: d.id, ...data });
+          }
+        });
+
+        // Sort by newest first
+        allAvailablePhones.sort((a, b) => {
+          const ta = a.createdAt?.seconds || 0;
+          const tb = b.createdAt?.seconds || 0;
+          return tb - ta;
+        });
+
+        const count = allAvailablePhones.length;
+        cntEl.textContent = `${count} Available`;
+        lblEl.textContent = `${count} phone${count !== 1 ? 's' : ''} ready for sale`;
+
+        renderPhoneList(allAvailablePhones);
+
+      } catch (err) {
+        console.error('Error loading phones:', err);
+        wrap.innerHTML = `
+        <div style="text-align:center;padding:32px;color:#EF4444;">
+          <i class="fas fa-exclamation-triangle" style="font-size:24px;display:block;margin-bottom:10px;"></i>
+          <div style="font-weight:600;">Failed to load phones</div>
+          <div style="font-size:12px;margin-top:6px;color:#94A3B8;">${err.message}</div>
+          <button onclick="location.reload()" class="btn-secondary btn-sm" style="margin-top:12px;">
+            <i class="fas fa-redo"></i> Retry
+          </button>
+        </div>`;
+        cntEl.textContent = 'Error';
+        lblEl.textContent = 'Could not load stock';
+      }
+    }
+
+    function renderPhoneList(phones) {
+      const wrap = document.getElementById('phoneListWrap');
+
+      if (phones.length === 0) {
+        wrap.innerHTML = `
+        <div style="text-align:center;padding:32px;color:#94A3B8;">
+          <i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4;"></i>
+          <div style="font-weight:600;margin-bottom:4px;">No available phones</div>
+          <div style="font-size:12px;">Add phones in the "Add Phones" section first.</div>
+        </div>`;
+        return;
+      }
+
+      wrap.innerHTML = phones.map(p => `
+      <div class="phone-result-row"
+        onclick="selectPhone('${p.id}')"
+        style="display:flex;justify-content:space-between;align-items:center;
+          padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:10px;
+          cursor:pointer;background:#fff;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;color:#1E293B;margin-bottom:2px;">
+            ${p.brand} ${p.model}
+          </div>
+          <div style="font-size:12px;color:#64748B;margin-bottom:4px;">
+            IMEI: <span style="font-family:monospace;">${p.imei}</span>
+            &nbsp;•&nbsp; ${p.ram} / ${p.storage}
+            ${p.color ? '&nbsp;•&nbsp; ' + p.color : ''}
+          </div>
+          ${p.isThirdParty
+          ? `<span class="badge badge-warning" style="font-size:10px;">
+                 <i class="fas fa-user-tie"></i> ${p.supplierName || 'Third Party'}
+               </span>`
+          : `<span class="badge badge-info" style="font-size:10px;">
+                 <i class="fas fa-store"></i> Shop Owned
+               </span>`
+        }
+        </div>
+        <div style="text-align:right;margin-left:12px;flex-shrink:0;">
+          <div style="font-size:17px;font-weight:800;color:#4F46E5;">
+            ₹${(p.sellingPrice || 0).toLocaleString('en-IN')}
+          </div>
+          <div style="font-size:11px;color:#10B981;margin-top:2px;">
+            <i class="fas fa-circle" style="font-size:7px;"></i> Available
+          </div>
+        </div>
+      </div>
+    `).join('');
+    }
+
+    /* ── Filter phones by search term ── */
+    window.filterPhones = function (term) {
+      const t = term.trim().toLowerCase();
+      if (!t) {
+        renderPhoneList(allAvailablePhones);
+        return;
+      }
+      const filtered = allAvailablePhones.filter(p =>
+        (p.brand || '').toLowerCase().includes(t) ||
+        (p.model || '').toLowerCase().includes(t) ||
+        (p.imei || '').includes(t) ||
+        (p.color || '').toLowerCase().includes(t) ||
+        (p.ram || '').toLowerCase().includes(t) ||
+        (p.storage || '').toLowerCase().includes(t) ||
+        (p.supplierName || '').toLowerCase().includes(t)
+      );
+      renderPhoneList(filtered);
+    };
+
+    /* ── Select a phone ── */
+    window.selectPhone = function (phoneId) {
+      const phone = allAvailablePhones.find(p => p.id === phoneId);
+      if (!phone) return;
+
+      selectedPhone = phone;
+
+      // Show selected card
+      document.getElementById('selectedPhoneCard').style.display = 'block';
+      document.getElementById('finalSellingPrice').value = phone.sellingPrice || 0;
+
+      document.getElementById('selectedPhoneDetails').innerHTML = `
+      <div style="background:#F8FAFC;border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:#64748B;text-transform:uppercase;font-weight:600;margin-bottom:3px;">Brand</div>
+        <div style="font-size:14px;font-weight:700;">${phone.brand}</div>
+      </div>
+      <div style="background:#F8FAFC;border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:#64748B;text-transform:uppercase;font-weight:600;margin-bottom:3px;">Model</div>
+        <div style="font-size:14px;font-weight:700;">${phone.model}</div>
+      </div>
+      <div style="background:#F8FAFC;border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:#64748B;text-transform:uppercase;font-weight:600;margin-bottom:3px;">IMEI</div>
+        <div style="font-size:12px;font-weight:600;font-family:monospace;">${phone.imei}</div>
+      </div>
+      <div style="background:#F8FAFC;border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:#64748B;text-transform:uppercase;font-weight:600;margin-bottom:3px;">RAM / Storage</div>
+        <div style="font-size:14px;font-weight:700;">${phone.ram} / ${phone.storage}</div>
+      </div>
+      ${phone.color ? `
+      <div style="background:#F8FAFC;border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:#64748B;text-transform:uppercase;font-weight:600;margin-bottom:3px;">Color</div>
+        <div style="font-size:14px;font-weight:700;">${phone.color}</div>
+      </div>` : ''}
+      ${phone.isThirdParty ? `
+      <div style="background:#FEF3C7;border-radius:8px;padding:10px;border:1px solid #F59E0B;">
+        <div style="font-size:10px;color:#92400E;text-transform:uppercase;font-weight:600;margin-bottom:3px;">Supplier</div>
+        <div style="font-size:13px;font-weight:700;color:#B45309;">${phone.supplierName}</div>
+        <div style="font-size:10px;color:#92400E;margin-top:2px;">UPI: ${phone.supplierUpi || '—'}</div>
+      </div>` : ''}
+    `;
+
+      recalcTotal();
+
+      // Scroll search back to top
+      document.getElementById('phoneListWrap').scrollTop = 0;
+      document.getElementById('phoneSearch').value = '';
+      renderPhoneList(allAvailablePhones);
+
+      // Scroll to selected card
+      document.getElementById('selectedPhoneCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    /* ── Clear selection ── */
+    window.clearSelectedPhone = function () {
+      selectedPhone = null;
+      document.getElementById('selectedPhoneCard').style.display = 'none';
+      document.getElementById('billSelling').textContent = '₹0';
+      document.getElementById('billTotal').textContent = '₹0';
+      document.getElementById('billExchangeRow').style.display = 'none';
+      document.getElementById('qrSection').style.display = 'none';
+      document.getElementById('payCash').value = 0;
+      document.getElementById('payUpi').value = 0;
+      document.getElementById('payCard').value = 0;
+      document.getElementById('paidTotal').textContent = '₹0';
+      document.getElementById('remainingBar').style.display = 'none';
+      renderPhoneList(allAvailablePhones);
+    };
+
+    /* ── Toggle exchange section ── */
+    window.toggleExchange = function (enabled) {
+      document.getElementById('exchangeSection').style.display = enabled ? 'block' : 'none';
+      if (!enabled) {
+        document.getElementById('exValue').value = '';
+      }
+      recalcTotal();
+    };
+
+    /* ── Recalculate total payable ── */
+    window.recalcTotal = function () {
+      const selling = Number(document.getElementById('finalSellingPrice').value) || 0;
+      const exEnabled = document.getElementById('enableExchange').checked;
+      const exVal = exEnabled ? (Number(document.getElementById('exValue').value) || 0) : 0;
+      const total = Math.max(0, selling - exVal);
+
+      document.getElementById('billSelling').textContent = '₹' + selling.toLocaleString('en-IN');
+
+      const exRow = document.getElementById('billExchangeRow');
+      if (exVal > 0) {
+        exRow.style.display = 'flex';
+        document.getElementById('billExchange').textContent = '−₹' + exVal.toLocaleString('en-IN');
+      } else {
+        exRow.style.display = 'none';
+      }
+
+      document.getElementById('billTotal').textContent = '₹' + total.toLocaleString('en-IN');
+
+      // Auto-fill cash to match total
+      document.getElementById('payCash').value = total;
+      document.getElementById('payUpi').value = 0;
+      document.getElementById('payCard').value = 0;
+      recalcPayments();
+    };
+
+    /* ── Recalculate payment fields ── */
+    window.recalcPayments = function () {
+      const total = getTotalPayable();
+      const cash = Number(document.getElementById('payCash').value) || 0;
+      const upi = Number(document.getElementById('payUpi').value) || 0;
+      const card = Number(document.getElementById('payCard').value) || 0;
+      const paid = cash + upi + card;
+      const rem = total - paid;
+
+      document.getElementById('paidTotal').textContent = '₹' + paid.toLocaleString('en-IN');
+
+      const remBar = document.getElementById('remainingBar');
+      if (rem > 0) {
+        remBar.style.display = 'flex';
+        document.getElementById('remaining').textContent = '₹' + rem.toLocaleString('en-IN');
+      } else {
+        remBar.style.display = 'none';
+      }
+    };
+
+    /* ── Update QR code for UPI amount ── */
+    window.updateQR = function () {
+      const upiAmt = Number(document.getElementById('payUpi').value) || 0;
+      const qrSec = document.getElementById('qrSection');
+
+      if (upiAmt <= 0 || !selectedPhone) {
+        qrSec.style.display = 'none';
+        return;
+      }
+
+      let upiId = shopSettings?.upiId || 'merchant@upi';
+      let upiName = shopSettings?.shopName || 'Max Mobile Shop';
+
+      // If third party phone — use supplier UPI
+      if (selectedPhone.isThirdParty && selectedPhone.supplierUpi) {
+        upiId = selectedPhone.supplierUpi;
+        upiName = selectedPhone.supplierName || 'Supplier';
+      }
+
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${upiAmt}&cu=INR`;
+
+      document.getElementById('qrTitle').textContent =
+        `Pay ₹${upiAmt.toLocaleString('en-IN')} via UPI`;
+      document.getElementById('qrUpiLabel').innerHTML =
+        `<strong>${upiName}</strong><br/>${upiId}`;
+
+      qrSec.style.display = 'flex';
+      qrSec.style.flexDirection = 'column';
+
+      // Clear and regenerate QR
+      document.getElementById('qrCode').innerHTML = '';
+      try {
+        new QRCode(document.getElementById('qrCode'), {
+          text: upiUrl,
+          width: 160,
+          height: 160,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        document.getElementById('qrCode').innerHTML =
+          `<div style="font-size:11px;color:#64748B;text-align:center;">QR: ${upiId}</div>`;
+      }
+    };
+
+    function getTotalPayable() {
+      if (!selectedPhone) return 0;
+      const selling = Number(document.getElementById('finalSellingPrice').value) || 0;
+      const exEnabled = document.getElementById('enableExchange').checked;
+      const exVal = exEnabled ? (Number(document.getElementById('exValue').value) || 0) : 0;
+      return Math.max(0, selling - exVal);
+    }
+
+    /* ── COMPLETE SALE ── */
+    window.completeSale = async function () {
+      const errEl = document.getElementById('saleError');
+      const btn = document.getElementById('completeSaleBtn');
+      const icon = document.getElementById('completeIcon');
+      const txt = document.getElementById('completeText');
+      errEl.style.display = 'none';
+
+      // Validations
+      if (!selectedPhone) {
+        showError('Please select a phone from the list above.'); return;
+      }
+      const custName = document.getElementById('customerName').value.trim();
+      const custMobile = document.getElementById('customerMobile').value.trim();
+      if (!custName) { showError('Please enter the customer name.'); return; }
+      if (!custMobile || custMobile.length < 10) {
+        showError('Please enter a valid 10-digit mobile number.'); return;
+      }
+
+      const total = getTotalPayable();
+      const cash = Number(document.getElementById('payCash').value) || 0;
+      const upi = Number(document.getElementById('payUpi').value) || 0;
+      const card = Number(document.getElementById('payCard').value) || 0;
+      const paid = cash + upi + card;
+
+      if (paid !== total) {
+        showError(
+          `Payment mismatch! Total payable: ₹${total.toLocaleString('en-IN')}, ` +
+          `but entered: ₹${paid.toLocaleString('en-IN')}. ` +
+          `Please adjust payment fields.`
+        );
+        return;
+      }
+
+      // Loading state
+      btn.disabled = true;
+      icon.className = 'fas fa-spinner fa-spin';
+      txt.textContent = 'Processing sale...';
+
+      try {
+        const sellingPrice = Number(document.getElementById('finalSellingPrice').value) || 0;
+
+        // Exchange phone handling
+        const exEnabled = document.getElementById('enableExchange').checked;
+        let exchangeData = null;
+        if (exEnabled) {
+          const exBrand = document.getElementById('exBrand').value.trim();
+          const exModel = document.getElementById('exModel').value.trim();
+          const exImei = document.getElementById('exImei').value.trim();
+          const exVal = Number(document.getElementById('exValue').value) || 0;
+
+          exchangeData = {
+            brand: exBrand,
+            model: exModel,
+            imei: exImei,
+            ram: document.getElementById('exRam').value,
+            storage: document.getElementById('exStorage').value,
+            color: document.getElementById('exColor').value.trim(),
+            value: exVal
+          };
+
+          // Add exchanged phone to inventory
+          if (exImei && exBrand) {
+            await addDoc(collection(db, 'phones'), {
+              brand: exBrand,
+              model: exModel,
+              imei: exImei,
+              ram: document.getElementById('exRam').value,
+              storage: document.getElementById('exStorage').value,
+              color: document.getElementById('exColor').value.trim(),
+              purchasePrice: exVal,
+              sellingPrice: 0,
+              isThirdParty: false,
+              thirdPersonId: null,
+              description: 'Received via customer exchange',
+              status: 'Available',
+              addedBy: currentUser.uid,
+              createdAt: serverTimestamp()
+            });
+          }
+        }
+
+        // Generate bill number
+        const billNumber = await generateBillNumber();
+
+        // Record sale in Firestore
+        await addDoc(collection(db, 'sales'), {
+          billNumber,
+          phoneId: selectedPhone.id,
+          brand: selectedPhone.brand,
+          model: selectedPhone.model,
+          imei: selectedPhone.imei,
+          ram: selectedPhone.ram,
+          storage: selectedPhone.storage,
+          color: selectedPhone.color || '',
+          isThirdParty: selectedPhone.isThirdParty || false,
+          thirdPersonId: selectedPhone.thirdPersonId || null,
+          supplierName: selectedPhone.supplierName || null,
+          supplierUpi: selectedPhone.supplierUpi || null,
+          sellingPrice,
+          exchangeData: exchangeData || null,
+          totalPaid: total,
+          payments: { cash, upi, card },
+          customerName: custName,
+          customerMobile: custMobile,
+          soldBy: currentUser.uid,
+          soldByName: currentUser.displayName || currentUser.email,
+          createdAt: serverTimestamp()
+        });
+
+        // Mark phone as Sold
+        await updateDoc(doc(db, 'phones', selectedPhone.id), {
+          status: 'Sold',
+          soldAt: serverTimestamp()
+        });
+
+        // Update third party balance
+        // amountOwed = dedicated direct field (what shop currently owes supplier)
+        // totalSales / totalPaid kept for history
+        if (selectedPhone.isThirdParty && selectedPhone.thirdPersonId) {
+          const purchasePrice = selectedPhone.purchasePrice || 0;
+          const tpRef = doc(db, 'thirdPersons', selectedPhone.thirdPersonId);
+          const tpSnap = await getDoc(tpRef);
+          if (tpSnap.exists()) {
+            const td = tpSnap.data();
+            const paidToSupplierViaUpi = (selectedPhone.supplierUpi && upi > 0);
+            // Fall back to computed value for existing records that don't yet have amountOwed
+            const currentOwed = td.amountOwed ?? ((td.totalSales || 0) - (td.totalPaid || 0));
+            await updateDoc(tpRef, {
+              amountOwed: Math.max(0, currentOwed + purchasePrice - (paidToSupplierViaUpi ? upi : 0)),
+              totalSales: (td.totalSales || 0) + purchasePrice,
+              totalPaid: (td.totalPaid || 0) + (paidToSupplierViaUpi ? upi : 0),
+              phonesInStock: Math.max(0, (td.phonesInStock || 1) - 1)
+            });
+          }
+        }
+
+        // Generate PDF Bill
+        generatePDF({
+          billNumber,
+          brand: selectedPhone.brand,
+          model: selectedPhone.model,
+          imei: selectedPhone.imei,
+          ram: selectedPhone.ram,
+          storage: selectedPhone.storage,
+          color: selectedPhone.color || '—',
+          customerName: custName,
+          customerMobile: custMobile,
+          sellingPrice,
+          totalPaid: total,
+          payments: { cash, upi, card },
+          exchange: exchangeData,
+          dateTime: new Date().toLocaleString('en-IN', {
+            day: '2-digit', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })
+        });
+
+        showToast('Sale completed! PDF bill downloaded.', 'success');
+
+        // Remove sold phone from available list
+        allAvailablePhones = allAvailablePhones.filter(p => p.id !== selectedPhone.id);
+
+        // Reset everything
+        clearSaleForm();
+        renderPhoneList(allAvailablePhones);
+        document.getElementById('availableCount').textContent =
+          `${allAvailablePhones.length} Available`;
+        document.getElementById('phoneCountLabel').textContent =
+          `${allAvailablePhones.length} phone${allAvailablePhones.length !== 1 ? 's' : ''} ready for sale`;
+
+      } catch (err) {
+        console.error('Sale error:', err);
+        showError('Sale failed: ' + err.message);
+      }
+
+      btn.disabled = false;
+      icon.className = 'fas fa-check-circle';
+      txt.textContent = 'Complete Sale & Print Bill';
+    };
+
+    function clearSaleForm() {
+      selectedPhone = null;
+      document.getElementById('selectedPhoneCard').style.display = 'none';
+      document.getElementById('customerName').value = '';
+      document.getElementById('customerMobile').value = '';
+      document.getElementById('payCash').value = 0;
+      document.getElementById('payUpi').value = 0;
+      document.getElementById('payCard').value = 0;
+      document.getElementById('billSelling').textContent = '₹0';
+      document.getElementById('billTotal').textContent = '₹0';
+      document.getElementById('billExchangeRow').style.display = 'none';
+      document.getElementById('qrSection').style.display = 'none';
+      document.getElementById('remainingBar').style.display = 'none';
+      document.getElementById('paidTotal').textContent = '₹0';
+      document.getElementById('enableExchange').checked = false;
+      document.getElementById('exchangeSection').style.display = 'none';
+      document.getElementById('phoneSearch').value = '';
+      document.getElementById('saleError').style.display = 'none';
+    }
+
+    /* ── Bill Number Generator ── */
+    async function generateBillNumber() {
+      const ref = doc(db, 'counters', 'bills');
+      try {
+        const snap = await getDoc(ref);
+        const next = snap.exists() ? (snap.data().count + 1) : 1001;
+        await setDoc(ref, { count: next });
+        return `BILL-${next}`;
+      } catch (e) {
+        return `BILL-${Date.now()}`;
+      }
+    }
+
+    /* ── PDF Generator (jsPDF) ── */
+    function generatePDF(d) {
+      try {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ unit: 'mm', format: 'a5' });
+        const W = 148, M = 14;
+        let y = 0;
+
+        // Header
+        pdf.setFillColor(79, 70, 229);
+        pdf.rect(0, 0, W, 30, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(15);
+        pdf.text('MAX MOBILE SHOP', W / 2, 12, { align: 'center' });
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('Smart Second-Hand Mobile Store', W / 2, 20, { align: 'center' });
+        y = 32;
+
+        // Bill strip
+        pdf.setFillColor(238, 242, 255);
+        pdf.rect(0, y, W, 16, 'F');
+        pdf.setTextColor(79, 70, 229);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9);
+        pdf.text(`Bill No: ${d.billNumber}`, M, y + 7);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.text(`Date: ${d.dateTime}`, M, y + 13);
+        pdf.setTextColor(16, 185, 129);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.text('PAID ✓', W - M, y + 10, { align: 'right' });
+        y += 20;
+
+        // Customer
+        pdf.setTextColor(30, 41, 59);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8);
+        pdf.text('CUSTOMER', M, y); y += 4;
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(M, y, W - M, y); y += 5;
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Name:   ${d.customerName}`, M, y); y += 5;
+        pdf.text(`Mobile: ${d.customerMobile}`, M, y); y += 8;
+
+        // Product
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('PRODUCT', M, y); y += 4;
+        pdf.line(M, y, W - M, y); y += 5;
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Model:  ${d.brand} ${d.model}`, M, y); y += 5;
+        pdf.text(`IMEI:   ${d.imei}`, M, y); y += 5;
+        pdf.text(`RAM:    ${d.ram} / ${d.storage}`, M, y); y += 5;
+        pdf.text(`Color:  ${d.color}`, M, y); y += 8;
+
+        // Payment
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('PAYMENT', M, y); y += 4;
+        pdf.line(M, y, W - M, y); y += 5;
+        pdf.setFont('helvetica', 'normal');
+        if (d.payments.cash > 0) {
+          pdf.text('Cash:', M, y);
+          pdf.text('₹' + d.payments.cash.toLocaleString('en-IN'), W - M, y, { align: 'right' }); y += 5;
+        }
+        if (d.payments.upi > 0) {
+          pdf.text('UPI/Online:', M, y);
+          pdf.text('₹' + d.payments.upi.toLocaleString('en-IN'), W - M, y, { align: 'right' }); y += 5;
+        }
+        if (d.payments.card > 0) {
+          pdf.text('Card:', M, y);
+          pdf.text('₹' + d.payments.card.toLocaleString('en-IN'), W - M, y, { align: 'right' }); y += 5;
+        }
+
+        // Exchange
+        if (d.exchange && d.exchange.value > 0) {
+          y += 2;
+          pdf.setFillColor(254, 243, 199);
+          pdf.rect(M - 2, y - 3, W - M * 2 + 4, 18, 'F');
+          pdf.setTextColor(146, 64, 14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Exchange:', M, y + 4);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(`${d.exchange.brand || ''} ${d.exchange.model || ''} (IMEI: ${d.exchange.imei || '—'})`, M, y + 9);
+          pdf.text(`−₹${d.exchange.value.toLocaleString('en-IN')}`, W - M, y + 4, { align: 'right' });
+          y += 20; pdf.setTextColor(30, 41, 59);
+        }
+
+        y += 3;
+        // Total box
+        pdf.setFillColor(79, 70, 229);
+        pdf.rect(M - 2, y - 3, W - M * 2 + 4, 14, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.text('TOTAL PAID', M, y + 5);
+        pdf.text('₹' + d.totalPaid.toLocaleString('en-IN'), W - M, y + 5, { align: 'right' });
+        y += 18;
+
+        // Footer
+        pdf.setTextColor(150, 150, 150);
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(7);
+        pdf.text('Thank you for shopping at Max Mobile Shop!', W / 2, y + 5, { align: 'center' });
+        pdf.text('All sales are final. Warranty as per terms.', W / 2, y + 10, { align: 'center' });
+
+        pdf.save(`Bill-${d.billNumber}.pdf`);
+      } catch (err) {
+        console.error('PDF error:', err);
+        showToast('Bill saved! PDF generation needs jsPDF loaded.', 'warning');
+      }
+    }
+
+    /* ── Sidebar ── */
+    function initSidebar(user) {
+      const nameEl = document.getElementById('sidebarUserName');
+      const roleEl = document.getElementById('sidebarUserRole');
+      const avatarEl = document.getElementById('sidebarAvatar');
+      if (nameEl) nameEl.textContent = user.displayName || user.email?.split('@')[0] || 'User';
+      if (roleEl) roleEl.textContent = user.role || 'staff';
+      if (avatarEl) avatarEl.textContent = (user.displayName || user.email || 'U')[0].toUpperCase();
+
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = user.role === 'admin' ? 'flex' : 'none';
+      });
+      document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+        el.classList.toggle('active', el.dataset.page === 'sales');
+      });
+
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      let collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+      sidebar.classList.toggle('collapsed', collapsed);
+      mainContent.classList.toggle('expanded', collapsed);
+
+      document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+        collapsed = !collapsed;
+        sidebar.classList.toggle('collapsed', collapsed);
+        mainContent.classList.toggle('expanded', collapsed);
+        localStorage.setItem('sidebarCollapsed', collapsed);
+      });
+
+      const backdrop = document.getElementById('sidebarBackdrop');
+      document.getElementById('mobileToggle')?.addEventListener('click', () => {
+        sidebar.classList.add('mobile-open'); backdrop?.classList.add('open');
+      });
+      backdrop?.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open'); backdrop?.classList.remove('open');
+      });
+
+      document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await signOut(auth);
+        sessionStorage.clear();
+        window.location.href = '../index.html';
+      });
+    }
+
+    /* ── Helpers ── */
+    function showError(msg) {
+      const el = document.getElementById('saleError');
+      el.textContent = msg;
+      el.style.display = 'block';
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showToast(msg, type = 'success') {
+      let c = document.getElementById('toast-container');
+      if (!c) {
+        c = document.createElement('div'); c.id = 'toast-container';
+        c.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+        document.body.appendChild(c);
+      }
+      const t = document.createElement('div');
+      t.style.cssText = `display:flex;align-items:center;gap:12px;padding:14px 18px;
+      background:#1E293B;color:#fff;border-radius:12px;min-width:280px;
+      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      border-left:4px solid ${type === 'success' ? '#10B981' : type === 'warning' ? '#F59E0B' : '#EF4444'};
+      font-family:Inter,sans-serif;font-size:14px;font-weight:500;`;
+      t.textContent = (type === 'success' ? '✅ ' : type === 'warning' ? '⚠️ ' : '❌ ') + msg;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 4000);
+    }
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Management — Max Mobile Shop</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+  <div class="app-layout">
+
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-mobile-alt"></i></div>
+        <span class="sidebar-title">Max Mobile</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">admin</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item" data-page="dashboard" href="dashboard.html">
+          <i class="fas fa-th-large"></i><span>Dashboard</span>
+          <span class="nav-tooltip">Dashboard</span>
+        </a>
+        <a class="nav-item" data-page="add-phone" href="add-phone.html">
+          <i class="fas fa-plus-circle"></i><span>Add Phones</span>
+          <span class="nav-tooltip">Add Phones</span>
+        </a>
+        <a class="nav-item" data-page="view-stock" href="view-stock.html">
+          <i class="fas fa-boxes"></i><span>View All Stock</span>
+          <span class="nav-tooltip">View Stock</span>
+        </a>
+        <div class="nav-section-label">Sales</div>
+        <a class="nav-item" data-page="sales" href="sales.html">
+          <i class="fas fa-cash-register"></i><span>Sales / Billing</span>
+          <span class="nav-tooltip">Sales</span>
+        </a>
+        <a class="nav-item" data-page="sales-history" href="sales-history.html">
+          <i class="fas fa-history"></i><span>Sales History</span>
+          <span class="nav-tooltip">Sales History</span>
+        </a>
+        <div class="nav-section-label">Management</div>
+        <a class="nav-item" data-page="third-person" href="third-person.html">
+          <i class="fas fa-users"></i><span>Third Persons</span>
+          <span class="nav-tooltip">Third Persons</span>
+        </a>
+        <a class="nav-item admin-only" data-page="staff" href="staff-management.html">
+          <i class="fas fa-user-shield"></i><span>Staff Management</span>
+          <span class="nav-tooltip">Staff</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a class="nav-item" id="logoutBtn" href="#">
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </a>
+      </div>
+    </aside>
+    <!-- ═══════════════ END SIDEBAR ═══════════════ -->
+
+    <div class="main-content staff-page" id="mainContent">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button id="mobileToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="page-title">Staff Management</div>
+            <div class="breadcrumb"><i class="fas fa-home"></i> Admin Panel</div>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <button class="btn-primary" onclick="document.getElementById('addStaffModal').classList.add('open')">
+            <i class="fas fa-user-plus"></i> <span>Add New Staff</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="content-area">
+
+        <!-- Stats -->
+        <div class="stats-grid" style="margin-bottom:24px;">
+          <div class="stat-card blue">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-label">Total Staff</div>
+            <div class="stat-value" id="statTotalStaff">0</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+            <div class="stat-label">Active</div>
+            <div class="stat-value" id="statActive">0</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
+            <div class="stat-label">Disabled</div>
+            <div class="stat-value" id="statDisabled">0</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
+            <div class="stat-label">Admins</div>
+            <div class="stat-value" id="statAdmins">0</div>
+          </div>
+        </div>
+
+        <!-- Staff Table -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-id-badge" style="color:#4F46E5;margin-right:8px;"></i>
+              All Staff Members
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="staffBody">
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:40px;color:#94A3B8;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:20px;display:block;margin-bottom:8px;"></i>
+                    Loading staff...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Staff Modal -->
+  <div class="modal-overlay" id="addStaffModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fas fa-user-plus" style="color:#4F46E5;margin-right:8px;"></i>
+          Create New Staff Account
+        </div>
+        <button class="modal-close" onclick="document.getElementById('addStaffModal').classList.remove('open')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label><i class="fas fa-user"></i> Full Name *</label>
+          <input type="text" id="staffName" placeholder="e.g. Rahul Sharma" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-envelope"></i> Email Address *</label>
+          <input type="email" id="staffEmail" placeholder="staff@maxmobile.com" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-lock"></i> Password *</label>
+          <input type="password" id="staffPass" placeholder="Minimum 6 characters" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-user-tag"></i> Role *</label>
+          <select id="staffRole">
+            <option value="staff">Staff — Add stock, Sell phones, View reports</option>
+            <option value="admin">Admin — Full access including Staff Management</option>
+          </select>
+        </div>
+        <div style="background:#EEF2FF;border-radius:10px;padding:14px;margin-top:4px;border:1px solid #C7D2FE;">
+          <div style="font-size:12px;font-weight:700;color:#4F46E5;margin-bottom:6px;">
+            <i class="fas fa-shield-alt" style="margin-right:6px;"></i>How staff creation works
+          </div>
+          <div style="font-size:12px;color:#64748B;line-height:1.8;">
+            A separate background process creates the account so your admin session stays active. The new staff member
+            can log in immediately.
+          </div>
+        </div>
+        <div id="addStaffError" class="error-msg" style="display:none;margin-top:12px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="document.getElementById('addStaffModal').classList.remove('open')">
+          Cancel
+        </button>
+        <button class="btn-primary" id="createStaffBtn" onclick="createStaff()">
+          <i class="fas fa-user-plus" id="createIcon"></i>
+          <span id="createText">Create Account</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module">
+
+    /* ─────────────────────────────────────────────────────────────────
+       KEY FIX: We use a SECONDARY Firebase app instance ("staffHelper")
+       to call createUserWithEmailAndPassword.
+  
+       Why this works:
+       - The primary app ("main") stays signed in as the admin.
+       - The secondary app creates the new user in isolation.
+       - After creation, we immediately sign out the secondary app.
+       - The primary app's onAuthStateChanged is NEVER disturbed.
+       - This means no other pages (third-person, dashboard, etc.)
+         ever see an auth state change and never get logged out.
+  
+       This is the official Firebase pattern for creating users from admin.
+    ───────────────────────────────────────────────────────────────── */
+
+    import { initializeApp, getApps, getApp, deleteApp }
+      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signOut }
+      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      collection, getDocs,
+      doc, getDoc, setDoc, updateDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { db, auth, firebaseConfig } from '../firebase-config.js';
+    import { initSidebar } from '../js/sidebar.js';
+
+
+    /* ── Session-based auth check (no onAuthStateChanged) ── */
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (!storedUser) {
+      window.location.href = '../index.html';
+      throw new Error('Not authenticated');
+    }
+
+    const userData = JSON.parse(storedUser);
+    if (userData.role !== 'admin') {
+      window.location.href = 'dashboard.html';
+      throw new Error('Not admin');
+    }
+
+    /* ── Verify user is still admin & active ── */
+    try {
+      const snap = await getDoc(doc(db, 'users', userData.uid));
+      if (!snap.exists() || !snap.data().isActive || snap.data().role !== 'admin') {
+        sessionStorage.clear();
+        window.location.href = '../index.html';
+      }
+      const refreshed = { uid: userData.uid, email: userData.email, ...snap.data() };
+      sessionStorage.setItem('currentUser', JSON.stringify(refreshed));
+      initSidebar('staff');
+    } catch (e) {
+      // Network error — proceed with cached session
+      initSidebar('staff');
+    }
+
+    await loadStaff();
+
+    /* ── Sidebar logic handled by js/sidebar.js ── */
+
+    /* ── Load Staff Table ── */
+    async function loadStaff() {
+      const snap = await getDocs(collection(db, 'users'));
+      const tbody = document.getElementById('staffBody');
+      tbody.innerHTML = '';
+
+      let total = 0, active = 0, disabled = 0, admins = 0;
+
+      if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#94A3B8;">
+        No staff found.</td></tr>`;
+        return;
+      }
+
+      let i = 0;
+      snap.forEach(d => {
+        const s = d.data(); i++;
+        total++;
+        if (s.isActive) active++; else disabled++;
+        if (s.role === 'admin') admins++;
+
+        const initial = (s.displayName || s.email || '?')[0].toUpperCase();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+        <td style="color:#94A3B8;font-size:13px;">${i}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:50%;flex-shrink:0;
+              background:linear-gradient(135deg,${s.role === 'admin' ? '#4F46E5,#7C3AED' : '#10B981,#059669'});
+              display:flex;align-items:center;justify-content:center;
+              font-size:15px;font-weight:700;color:#fff;">
+              ${initial}
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#1E293B;">${s.displayName || '—'}</div>
+              <div style="font-size:11px;color:#94A3B8;">Added: ${s.createdAt?.toDate ? s.createdAt.toDate().toLocaleDateString('en-IN') : 'N/A'}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:13px;color:#64748B;">${s.email}</td>
+        <td>
+          <span class="badge ${s.role === 'admin' ? 'badge-purple' : 'badge-info'}">
+            <i class="fas fa-${s.role === 'admin' ? 'crown' : 'user'}" style="font-size:9px;"></i>
+            ${s.role}
+          </span>
+        </td>
+        <td>
+          <span class="badge ${s.isActive ? 'badge-success' : 'badge-danger'}">
+            <i class="fas fa-circle" style="font-size:7px;"></i>
+            ${s.isActive ? 'Active' : 'Disabled'}
+          </span>
+        </td>
+        <td>
+          <button class="btn-${s.isActive ? 'warning' : 'success'} btn-sm"
+            onclick="toggleStatus('${d.id}', ${s.isActive})">
+            <i class="fas fa-${s.isActive ? 'ban' : 'check-circle'}"></i>
+            ${s.isActive ? 'Disable' : 'Enable'}
+          </button>
+        </td>`;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('statTotalStaff').textContent = total;
+      document.getElementById('statActive').textContent = active;
+      document.getElementById('statDisabled').textContent = disabled;
+      document.getElementById('statAdmins').textContent = admins;
+    }
+
+    /* ── Toggle Active Status ── */
+    window.toggleStatus = async function (uid, currentStatus) {
+      try {
+        await updateDoc(doc(db, 'users', uid), { isActive: !currentStatus });
+        showToast(`Staff ${!currentStatus ? 'enabled' : 'disabled'} successfully.`);
+        await loadStaff();
+      } catch (e) {
+        showToast('Failed: ' + e.message, 'error');
+      }
+    };
+
+    /* ── Create Staff — Uses Secondary App So Admin Stays Logged In ── */
+    window.createStaff = async function () {
+      const name = document.getElementById('staffName').value.trim();
+      const email = document.getElementById('staffEmail').value.trim();
+      const pass = document.getElementById('staffPass').value;
+      const role = document.getElementById('staffRole').value;
+      const errEl = document.getElementById('addStaffError');
+      const btn = document.getElementById('createStaffBtn');
+      const icon = document.getElementById('createIcon');
+      const txt = document.getElementById('createText');
+
+      errEl.style.display = 'none';
+
+      if (!name) { errEl.textContent = 'Full name is required.'; errEl.style.display = 'block'; return; }
+      if (!email) { errEl.textContent = 'Email is required.'; errEl.style.display = 'block'; return; }
+      if (!pass || pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+
+      btn.disabled = true;
+      icon.className = 'fas fa-spinner fa-spin';
+      txt.textContent = 'Creating...';
+
+      let secondaryApp = null;
+
+      try {
+        /* ── Create a SECONDARY Firebase app instance ──
+           This is isolated from the primary app.
+           The admin's onAuthStateChanged is NEVER called.
+           All other pages remain completely unaffected.        */
+        const secondaryConfig = { ...firebaseConfig };
+        secondaryApp = initializeApp(secondaryConfig, 'staffCreation_' + Date.now());
+        const secondaryAuth = getAuth(secondaryApp);
+
+        const { createUserWithEmailAndPassword, updateProfile, signOut: secondarySignOut } =
+          await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+        // Create user in secondary auth context
+        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
+        await updateProfile(cred.user, { displayName: name });
+
+        // Immediately sign out secondary app — admin unaffected
+        await secondarySignOut(secondaryAuth);
+
+        // Save user profile to Firestore (using primary db — admin is still signed in)
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          displayName: name,
+          email: email,
+          role: role,
+          isActive: true,
+          createdAt: serverTimestamp()
+        });
+
+        // Clean up secondary app
+        await deleteApp(secondaryApp);
+        secondaryApp = null;
+
+        // Reset form
+        document.getElementById('staffName').value = '';
+        document.getElementById('staffEmail').value = '';
+        document.getElementById('staffPass').value = '';
+
+        document.getElementById('addStaffModal').classList.remove('open');
+        showToast(`✅ Staff "${name}" created successfully! They can log in now.`);
+        await loadStaff();
+
+      } catch (e) {
+        // Clean up secondary app on error
+        if (secondaryApp) {
+          try { await deleteApp(secondaryApp); } catch (_) { }
+        }
+
+        let msg = e.message;
+        if (e.code === 'auth/email-already-in-use') msg = 'This email is already registered.';
+        if (e.code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
+        if (e.code === 'auth/weak-password') msg = 'Password too weak. Use at least 6 characters.';
+
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+      }
+
+      btn.disabled = false;
+      icon.className = 'fas fa-user-plus';
+      txt.textContent = 'Create Account';
+    };
+
+    /* ── Toast helper ── */
+    function showToast(msg, type = 'success') {
+      let c = document.getElementById('toast-container');
+      if (!c) {
+        c = document.createElement('div'); c.id = 'toast-container';
+        c.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+        document.body.appendChild(c);
+      }
+      const t = document.createElement('div');
+      t.style.cssText = `display:flex;align-items:center;gap:12px;padding:14px 18px;
+      background:#1E293B;color:#fff;border-radius:12px;min-width:280px;
+      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      border-left:4px solid ${type === 'success' ? '#10B981' : '#EF4444'};
+      font-family:Inter,sans-serif;font-size:14px;font-weight:500;`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 4000);
+    }
+
+  </script>
+</body>
+
+</html>

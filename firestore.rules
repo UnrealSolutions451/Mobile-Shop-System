@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: get user role from users collection
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isAuth() && getRole() == 'admin';
+    }
+
+    function isStaff() {
+      return isAuth() && (getRole() == 'staff' || getRole() == 'admin');
+    }
+
+    function isActive() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuth() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isAdmin() || request.auth.uid == userId;
+      allow delete: if isAdmin();
+    }
+
+    // Phones / Stock
+    match /phones/{phoneId} {
+      allow read: if isAuth() && isActive();
+      allow create: if isStaff() && isActive();
+      allow update: if isStaff() && isActive();
+      allow delete: if isAdmin();
+    }
+
+    // Third Persons / Suppliers
+    match /thirdPersons/{personId} {
+      allow read: if isAuth() && isActive();
+      allow create: if isStaff() && isActive();
+      allow update: if isStaff() && isActive();
+      allow delete: if isAdmin();
+    }
+
+    // Sales
+    match /sales/{saleId} {
+      allow read: if isAuth() && isActive();
+      allow create: if isStaff() && isActive();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Shop settings (UPI, name etc.)
+    match /settings/{settingId} {
+      allow read: if isAuth() && isActive();
+      allow write: if isAdmin();
+    }
+
+    // Bill counters
+    match /counters/{counterId} {
+      allow read: if isAuth() && isActive();
+      allow write: if isStaff() && isActive();
+    }
+  }
+}

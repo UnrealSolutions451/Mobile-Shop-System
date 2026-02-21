@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Third Persons — Max Mobile Shop</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+  <div class="app-layout">
+
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-mobile-alt"></i></div>
+        <span class="sidebar-title">Max Mobile</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">staff</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item" data-page="dashboard" href="dashboard.html">
+          <i class="fas fa-th-large"></i><span>Dashboard</span>
+          <span class="nav-tooltip">Dashboard</span>
+        </a>
+        <a class="nav-item" data-page="add-phone" href="add-phone.html">
+          <i class="fas fa-plus-circle"></i><span>Add Phones</span>
+          <span class="nav-tooltip">Add Phones</span>
+        </a>
+        <a class="nav-item" data-page="view-stock" href="view-stock.html">
+          <i class="fas fa-boxes"></i><span>View All Stock</span>
+          <span class="nav-tooltip">View Stock</span>
+        </a>
+        <div class="nav-section-label">Sales</div>
+        <a class="nav-item" data-page="sales" href="sales.html">
+          <i class="fas fa-cash-register"></i><span>Sales / Billing</span>
+          <span class="nav-tooltip">Sales</span>
+        </a>
+        <a class="nav-item" data-page="sales-history" href="sales-history.html">
+          <i class="fas fa-history"></i><span>Sales History</span>
+          <span class="nav-tooltip">Sales History</span>
+        </a>
+        <div class="nav-section-label">Management</div>
+        <a class="nav-item" data-page="third-person" href="third-person.html">
+          <i class="fas fa-users"></i><span>Third Persons</span>
+          <span class="nav-tooltip">Third Persons</span>
+        </a>
+        <a class="nav-item admin-only" data-page="staff" href="staff-management.html">
+          <i class="fas fa-user-shield"></i><span>Staff Management</span>
+          <span class="nav-tooltip">Staff</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a class="nav-item" id="logoutBtn" href="#">
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </a>
+      </div>
+    </aside>
+    <!-- ═══════════════ END SIDEBAR ═══════════════ -->
+
+    <div class="main-content" id="mainContent">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button id="mobileToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="page-title">Third Person Management</div>
+            <div class="breadcrumb"><i class="fas fa-home"></i> Suppliers</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+
+        <!-- Stats Row -->
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-bottom:24px;">
+          <div class="stat-card blue">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-label">Total Suppliers</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+            <div class="stat-label">Phones In Stock</div>
+            <div class="stat-value" id="statStock">0</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-label">Total Sales</div>
+            <div class="stat-value" id="statSales">₹0</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-label">Pending Balance</div>
+            <div class="stat-value" id="statBalance">₹0</div>
+          </div>
+        </div>
+
+        <!-- Cards Grid -->
+        <div id="tpGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;">
+          <div style="text-align:center;padding:48px;color:#94A3B8;grid-column:1/-1;
+          background:#fff;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,.07);">
+            <i class="fas fa-spinner fa-spin" style="font-size:28px;margin-bottom:12px;display:block;"></i>
+            <div>Loading suppliers...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fas fa-edit" style="color:#4F46E5;margin-right:8px;"></i>
+          Edit Supplier Details
+        </div>
+        <button class="modal-close" onclick="closeEditModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId" />
+        <div class="form-group">
+          <label><i class="fas fa-user"></i> Supplier Name</label>
+          <input type="text" id="editName" placeholder="Full name" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-qrcode"></i> UPI ID</label>
+          <input type="text" id="editUpi" placeholder="name@upi" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-phone"></i> Phone Number</label>
+          <input type="tel" id="editPhone" placeholder="10-digit number" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-rupee-sign"></i> Amount Owed (&#8377;) <span
+              style="font-size:11px;color:#64748B;font-weight:400;">&#8212; set directly</span></label>
+          <input type="number" id="editOwed" placeholder="0" min="0"
+            style="border-color:#F59E0B;font-weight:700;font-size:18px;" />
+          <div style="font-size:11px;color:#64748B;margin-top:4px;">
+            This directly sets how much the shop currently owes this supplier.
+          </div>
+        </div>
+        <div id="editError" class="error-msg" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveEdit()">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module">
+
+    /* ─────────────────────────────────────────────────────────────────
+       FIX: We do NOT use onAuthStateChanged here.
+       Reason: When staff-management.html creates a new Firebase user
+       via createUserWithEmailAndPassword, Firebase automatically signs
+       in that new user. This fires onAuthStateChanged on ALL open pages
+       in the same browser — including this one — with the NEW (unknown)
+       user, causing the auth check to fail and redirect to login.
+  
+       Solution: Check auth state ONCE using getCurrentUser() from
+       sessionStorage. If sessionStorage has a valid user, trust it and
+       proceed. Only redirect to login if sessionStorage is empty.
+       We use getAuth().currentUser for a lightweight check as backup.
+    ───────────────────────────────────────────────────────────────── */
+
+    import { db, auth } from '../firebase-config.js';
+    import { initSidebar } from '../js/sidebar.js';
+    import { signOut }
+      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      collection, getDocs, query, where,
+      doc, getDoc, updateDoc, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
+    /* ── Step 1: Check session FIRST (no onAuthStateChanged) ── */
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (!storedUser) {
+      window.location.href = '../index.html';
+      throw new Error('Not authenticated');
+    }
+
+    const userData = JSON.parse(storedUser);
+
+    /* ── Step 2: Light Firestore check to confirm user still active ── */
+    async function verifyAndInit() {
+      try {
+        const snap = await getDoc(doc(db, 'users', userData.uid));
+        if (!snap.exists() || !snap.data().isActive) {
+          sessionStorage.clear();
+          window.location.href = '../index.html';
+          return;
+        }
+        // Refresh session data in case of role change
+        const refreshed = { uid: userData.uid, email: userData.email, ...snap.data() };
+        sessionStorage.setItem('currentUser', JSON.stringify(refreshed));
+
+        initSidebar('third-person');
+        await loadThirdPersons();
+      } catch (e) {
+        console.error('Verify error:', e);
+        // Don't redirect on network errors — just init with navigation
+        initSidebar('third-person');
+        await loadThirdPersons();
+      }
+    }
+
+    await verifyAndInit();
+
+    /* ── Sidebar logic now handled by js/sidebar.js ── */
+
+    /* ── Load Suppliers ── */
+    async function loadThirdPersons() {
+      const grid = document.getElementById('tpGrid');
+      try {
+        // Fetch all suppliers
+        const tpSnap = await getDocs(collection(db, 'thirdPersons'));
+
+        // Fetch ALL available phones to get real stock counts
+        const phonesSnap = await getDocs(query(collection(db, 'phones'), where('status', '==', 'Available')));
+        const stockMap = {};
+        phonesSnap.forEach(pd => {
+          const p = pd.data();
+          if (p.isThirdParty && p.thirdPersonId) {
+            stockMap[p.thirdPersonId] = (stockMap[p.thirdPersonId] || 0) + 1;
+          }
+        });
+
+        let totalSuppliers = 0, totalStock = 0, totalSales = 0, totalBalance = 0;
+
+        if (tpSnap.empty) {
+          grid.innerHTML = `
+          <div style="text-align:center;padding:48px;color:#94A3B8;grid-column:1/-1;
+            background:#fff;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,.07);">
+            <i class="fas fa-users" style="font-size:36px;margin-bottom:12px;opacity:.3;display:block;"></i>
+            <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No suppliers yet</div>
+            <div style="font-size:13px;">Add phones with "Third Party" checked to see suppliers here.</div>
+          </div>`;
+          return;
+        }
+
+        grid.innerHTML = '';
+
+        // Loop through suppliers
+        for (const d of tpSnap.docs) {
+          const tp = d.data();
+          const id = d.id;
+          const realStock = stockMap[id] || 0;
+
+          // Auto-sync mismatching stock counts to Firestore (silently)
+          if (tp.phonesInStock !== realStock) {
+            try {
+              await updateDoc(doc(db, 'thirdPersons', id), { phonesInStock: realStock });
+            } catch (e) { console.warn('Sync error:', e); }
+          }
+
+          const owed = tp.amountOwed ?? ((tp.totalSales || 0) - (tp.totalPaid || 0));
+
+          totalSuppliers++;
+          totalStock += realStock;
+          totalSales += (tp.totalSales || 0);
+          totalBalance += owed;
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.marginBottom = '0';
+
+          // Safely escape name for inline onclick
+          const safeName = (tp.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+          const safeUpi = (tp.upiId || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+          const safePhone = (tp.phone || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+          card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div style="width:52px;height:52px;border-radius:14px;
+                background:linear-gradient(135deg,#4F46E5,#7C3AED);
+                display:flex;align-items:center;justify-content:center;
+                font-size:22px;font-weight:800;color:#fff;flex-shrink:0;">
+                ${(tp.name || 'S')[0].toUpperCase()}
+              </div>
+              <div>
+                <div style="font-size:16px;font-weight:700;color:#1E293B;">${tp.name || '\u2014'}</div>
+                <div style="font-size:12px;color:#94A3B8;margin-top:2px;">
+                  <i class="fas fa-phone" style="margin-right:4px;"></i>${tp.phone || 'No phone added'}
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="openEditModal('${id}','${safeName}','${safeUpi}','${safePhone}',${owed})"
+                class="btn-secondary btn-sm">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button onclick="deleteSupplier('${id}','${safeName}')"
+                class="btn-danger btn-sm">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+            <div style="background:#EEF2FF;border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-size:10px;color:#6366F1;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Phones In Stock</div>
+              <div style="font-size:22px;font-weight:800;color:#4F46E5;">${realStock}</div>
+            </div>
+            <div style="background:#D1FAE5;border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-size:10px;color:#065F46;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Total Buying Price</div>
+              <div style="font-size:16px;font-weight:800;color:#059669;">\u20b9${(tp.totalSales || 0).toLocaleString('en-IN')}</div>
+            </div>
+            <div style="background:#DBEAFE;border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-size:10px;color:#1E40AF;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Direct Payments</div>
+              <div style="font-size:16px;font-weight:800;color:#2563EB;">\u20b9${(tp.totalPaid || 0).toLocaleString('en-IN')}</div>
+            </div>
+            <div style="background:${owed > 0 ? '#FEF3C7' : '#D1FAE5'};border-radius:10px;padding:12px;text-align:center;
+              border:2px solid ${owed > 0 ? '#F59E0B' : '#10B981'};">
+              <div style="font-size:10px;color:${owed > 0 ? '#92400E' : '#065F46'};text-transform:uppercase;font-weight:600;margin-bottom:4px;">Amount Owed</div>
+              <div style="font-size:16px;font-weight:800;color:${owed > 0 ? '#D97706' : '#059669'};">\u20b9${owed.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;
+            background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;">
+            <i class="fas fa-qrcode" style="color:#4F46E5;font-size:16px;"></i>
+            <div>
+              <div style="font-size:10px;color:#94A3B8;text-transform:uppercase;font-weight:600;">UPI ID</div>
+              <div style="font-size:13px;font-weight:600;color:#374151;">${tp.upiId || 'Not set'}</div>
+            </div>
+          </div>`;
+
+          grid.appendChild(card);
+        }
+
+        // Update stat cards
+        document.getElementById('statTotal').textContent = totalSuppliers;
+        document.getElementById('statStock').textContent = totalStock;
+        document.getElementById('statSales').textContent = '₹' + totalSales.toLocaleString('en-IN');
+        document.getElementById('statBalance').textContent = '₹' + totalBalance.toLocaleString('en-IN');
+
+      } catch (err) {
+        console.error('Load error:', err);
+        grid.innerHTML = `
+        <div style="text-align:center;padding:48px;color:#EF4444;grid-column:1/-1;background:#fff;border-radius:12px;">
+          <i class="fas fa-exclamation-triangle" style="font-size:28px;margin-bottom:12px;display:block;"></i>
+          <div>Failed to load suppliers. Check Firestore rules.</div>
+          <div style="font-size:12px;margin-top:8px;color:#94A3B8;">${err.message}</div>
+        </div>`;
+      }
+    }
+
+    /* ── Edit Modal ── */
+    window.openEditModal = function (id, name, upi, phone, owed) {
+      document.getElementById('editId').value = id;
+      document.getElementById('editName').value = name;
+      document.getElementById('editUpi').value = upi;
+      document.getElementById('editPhone').value = phone;
+      document.getElementById('editOwed').value = owed ?? 0;
+      document.getElementById('editError').style.display = 'none';
+      document.getElementById('editModal').classList.add('open');
+    };
+
+    window.closeEditModal = function () {
+      document.getElementById('editModal').classList.remove('open');
+    };
+
+    window.saveEdit = async function () {
+      const id = document.getElementById('editId').value;
+      const name = document.getElementById('editName').value.trim();
+      const upiId = document.getElementById('editUpi').value.trim();
+      const phone = document.getElementById('editPhone').value.trim();
+      const owed = Number(document.getElementById('editOwed').value) || 0;
+      const errEl = document.getElementById('editError');
+      errEl.style.display = 'none';
+
+      if (!name) { errEl.textContent = 'Name is required.'; errEl.style.display = 'block'; return; }
+      if (!upiId) { errEl.textContent = 'UPI ID is required.'; errEl.style.display = 'block'; return; }
+
+      try {
+        await updateDoc(doc(db, 'thirdPersons', id), { name, upiId, phone, amountOwed: owed });
+        closeEditModal();
+        showToast('Supplier updated successfully!');
+        await loadThirdPersons();
+      } catch (e) {
+        errEl.textContent = 'Update failed: ' + e.message;
+        errEl.style.display = 'block';
+      }
+    };
+
+    /* ── Delete Supplier ── */
+    window.deleteSupplier = async function (id, name) {
+      if (!confirm(`Delete supplier "${name}"?\n\nThis only removes the supplier record. Phones linked to them remain in stock.`)) return;
+      try {
+        await deleteDoc(doc(db, 'thirdPersons', id));
+        showToast(`Supplier "${name}" deleted.`);
+        await loadThirdPersons();
+      } catch (e) {
+        showToast('Delete failed: ' + e.message, 'error');
+      }
+    };
+
+    function showToast(msg, type = 'success') {
+      let c = document.getElementById('toast-container');
+      if (!c) {
+        c = document.createElement('div'); c.id = 'toast-container';
+        c.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+        document.body.appendChild(c);
+      }
+      const t = document.createElement('div');
+      t.style.cssText = `display:flex;align-items:center;gap:12px;padding:14px 18px;
+      background:#1E293B;color:#fff;border-radius:12px;min-width:280px;
+      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      border-left:4px solid ${type === 'success' ? '#10B981' : '#EF4444'};
+      font-family:Inter,sans-serif;font-size:14px;font-weight:500;`;
+      t.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3500);
+    }
+
+  </script>
+</body>
+
+</html>
