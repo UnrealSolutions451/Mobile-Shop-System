@@ -147,7 +147,7 @@
 
     let allPhones = [];
     let filtered = [];
-    const PAGE_SIZE = 15;
+    const PAGE_SIZE = 5;
     let currentPage = 1;
 
     requireAuth(async (user) => {
@@ -236,5 +236,6 @@
     function debounce(fn, d) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); }; }
   </script>
 </body>
+
 
 </html>
