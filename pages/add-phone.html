@@ -275,6 +275,10 @@
                 <i class="fas fa-plus" id="submitIcon"></i>
                 <span id="submitText">Add to Stock</span>
               </button>
+              <button type="button" class="btn-secondary" id="csvImportBtn">
+                <i class="fas fa-file-csv"></i> Import CSV
+              </button>
+              <input type="file" id="csvFileInput" accept=".csv" style="display:none;" />
               <button type="button" class="btn-secondary" onclick="clearForm()">
                 <i class="fas fa-redo"></i> Reset Form
               </button>
@@ -286,6 +290,33 @@
 
     </div><!-- end main-content -->
   </div><!-- end app-layout -->
+
+  <!-- CSV Preview Modal -->
+  <div class="modal-overlay" id="csvPreviewModal">
+    <div class="modal" style="max-width:1100px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fas fa-file-import" style="color:#4F46E5;margin-right:8px;"></i>
+          Review CSV Content
+        </div>
+        <button class="modal-close" id="closeCsvModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="csvContentPreview" class="table-wrap">
+          <!-- Table will be injected here -->
+        </div>
+        <div id="csvImportError" class="error-msg" style="display:none;margin-top:16px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="cancelCsvBtn">Cancel</button>
+        <button class="btn-primary" id="confirmCsvBtn">
+          <i class="fas fa-check"></i> Import <span>0</span> Phones
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast-container"></div>
 
@@ -415,6 +446,230 @@
       document.getElementById('addPhoneForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         await handleSubmit(user);
+      });
+
+      /* ── 3. CSV Import Logic ── */
+      const csvImportBtn = document.getElementById('csvImportBtn');
+      const csvFileInput = document.getElementById('csvFileInput');
+      const csvPreviewModal = document.getElementById('csvPreviewModal');
+      const csvContentPreview = document.getElementById('csvContentPreview');
+      const confirmCsvBtn = document.getElementById('confirmCsvBtn');
+      const cancelCsvBtn = document.getElementById('cancelCsvBtn');
+      const closeCsvModal = document.getElementById('closeCsvModal');
+      const csvImportError = document.getElementById('csvImportError');
+
+      let parsedCsvData = [];
+
+      csvImportBtn.addEventListener('click', () => csvFileInput.click());
+
+      csvFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const text = await file.text();
+        parseCSV(text);
+        csvFileInput.value = ''; // Reset for next selection
+      });
+
+      function parseCSV(text) {
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+        if (lines.length < 2) {
+          showToast('CSV file is empty or missing data.', 'error');
+          return;
+        }
+
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const expectedHeaders = [
+          'brand', 'model', 'imei', 'ram', 'storage', 'color',
+          'purchaseprice', 'sellingprice', 'description',
+          'isthirdparty', 'suppliername', 'supplierupi', 'supplierphone',
+          'oldownername', 'oldpurchaseprice', 'aadhar'
+        ];
+
+        // Check if all essential headers are present (optional check, but good for UX)
+        const missingHeaders = expectedHeaders.filter(h => !headers.includes(h) && !['ram', 'storage', 'color', 'description', 'suppliername', 'supplierupi', 'supplierphone', 'oldownername', 'oldpurchaseprice', 'aadhar'].includes(h));
+        if (missingHeaders.length > 0) {
+          // Allow missing optional headers, but brand, model, imei, purchaseprice, sellingprice are important
+          const required = ['brand', 'model', 'imei', 'purchaseprice', 'sellingprice'];
+          const missingRequired = required.filter(h => !headers.includes(h));
+          if (missingRequired.length > 0) {
+            showToast(`Missing required CSV columns: ${missingRequired.join(', ')}`, 'error');
+            return;
+          }
+        }
+
+        parsedCsvData = [];
+        for (let i = 1; i < lines.length; i++) {
+          const colsRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; // Simple regex to handle commas inside quotes if any
+          const cols = lines[i].split(colsRegex).map(c => c.trim().replace(/^"|"$/g, ''));
+
+          if (cols.length < headers.length) continue;
+
+          const row = {};
+          headers.forEach((h, idx) => {
+            row[h] = cols[idx] || '';
+          });
+          parsedCsvData.push(row);
+        }
+
+        renderPreviewTable();
+        csvPreviewModal.classList.add('open');
+      }
+
+      function renderPreviewTable() {
+        if (parsedCsvData.length === 0) {
+          csvContentPreview.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">No valid rows found in CSV.</div>';
+          confirmCsvBtn.disabled = true;
+          return;
+        }
+
+        let html = `<table>
+          <thead>
+            <tr>
+              <th>Brand</th>
+              <th>Model</th>
+              <th>IMEI</th>
+              <th>RAM/Storage</th>
+              <th>Purchase</th>
+              <th>Selling</th>
+              <th>Third Party?</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+        parsedCsvData.forEach((row, idx) => {
+          html += `
+            <tr>
+              <td><strong>${row.brand || '—'}</strong></td>
+              <td>${row.model || '—'}</td>
+              <td><code>${row.imei || '—'}</code></td>
+              <td>${row.ram || '—'} / ${row.storage || '—'}</td>
+              <td>₹${Number(row.purchaseprice || 0).toLocaleString()}</td>
+              <td>₹${Number(row.sellingprice || 0).toLocaleString()}</td>
+              <td>${row.isthirdparty && row.isthirdparty.toLowerCase() === 'true' ? '<span class="badge badge-info">Yes</span>' : '<span class="badge badge-gray">No</span>'}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        csvContentPreview.innerHTML = html;
+        confirmCsvBtn.querySelector('span').textContent = parsedCsvData.length;
+        confirmCsvBtn.disabled = false;
+        csvImportError.style.display = 'none';
+      }
+
+      cancelCsvBtn.addEventListener('click', () => csvPreviewModal.classList.remove('open'));
+      closeCsvModal.addEventListener('click', () => csvPreviewModal.classList.remove('open'));
+
+      confirmCsvBtn.addEventListener('click', async () => {
+        confirmCsvBtn.disabled = true;
+        const span = confirmCsvBtn.querySelector('span');
+        const originalText = confirmCsvBtn.innerHTML;
+        confirmCsvBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        csvImportError.style.display = 'none';
+
+        try {
+          let successCount = 0;
+          let errors = [];
+
+          for (let i = 0; i < parsedCsvData.length; i++) {
+            const row = parsedCsvData[i];
+
+            // Basic validation
+            if (!row.brand || !row.model || !/^\d{15}$/.test(row.imei) || !row.purchaseprice || !row.sellingprice) {
+              errors.push(`Row ${i + 2}: Missing data or invalid IMEI format.`);
+              continue;
+            }
+
+            // Uniqueness check
+            const imeiQ = query(collection(db, 'phones'), where('imei', '==', row.imei));
+            const imeiSnap = await getDocs(imeiQ);
+            if (!imeiSnap.empty) {
+              errors.push(`Row ${i + 2}: IMEI ${row.imei} already exists.`);
+              continue;
+            }
+
+            // Logic matching handleSubmit
+            let thirdPersonId = null;
+            const isThirdParty = row.isthirdparty && row.isthirdparty.toLowerCase() === 'true';
+
+            if (isThirdParty) {
+              const supplierPhone = row.supplierphone || '';
+              if (supplierPhone) {
+                const tpQ = query(collection(db, 'thirdPersons'), where('phone', '==', supplierPhone));
+                const tpSnap = await getDocs(tpQ);
+                if (!tpSnap.empty) {
+                  thirdPersonId = tpSnap.docs[0].id;
+                  const existing = tpSnap.docs[0].data();
+                  await updateDoc(doc(db, 'thirdPersons', thirdPersonId), {
+                    phonesInStock: (existing.phonesInStock || 0) + 1,
+                    upiId: row.supplierupi || existing.upiId,
+                    name: row.suppliername || existing.name
+                  });
+                }
+              }
+              if (!thirdPersonId) {
+                const newTp = await addDoc(collection(db, 'thirdPersons'), {
+                  name: row.suppliername || 'Unknown Supplier',
+                  upiId: row.supplierupi || '',
+                  phone: supplierPhone,
+                  aadharNumber: '',
+                  phonesInStock: 1,
+                  totalSales: 0,
+                  totalPaid: 0,
+                  createdAt: serverTimestamp()
+                });
+                thirdPersonId = newTp.id;
+              }
+            }
+
+            const phoneData = {
+              brand: row.brand,
+              model: row.model,
+              imei: row.imei,
+              ram: row.ram || '',
+              storage: row.storage || '',
+              color: row.color || '',
+              purchasePrice: Number(row.purchaseprice),
+              sellingPrice: Number(row.sellingprice),
+              description: row.description || '',
+              isThirdParty,
+              thirdPersonId: thirdPersonId || null,
+              supplierName: isThirdParty ? (row.suppliername || null) : null,
+              supplierUpi: isThirdParty ? (row.supplierupi || null) : null,
+              supplierPhone: isThirdParty ? (row.supplierphone || null) : null,
+              oldOwnerName: row.oldownername || '',
+              oldPurchasePrice: Number(row.oldpurchaseprice) || 0,
+              aadharNumber: row.aadhar || '',
+              status: 'Available',
+              addedBy: user.uid,
+              addedByName: user.displayName || user.email,
+              createdAt: serverTimestamp()
+            };
+
+            await addDoc(collection(db, 'phones'), phoneData);
+            successCount++;
+          }
+
+          if (errors.length > 0) {
+            csvImportError.innerHTML = `<strong>Imported ${successCount} phones, but encountered ${errors.length} errors:</strong><br><ul style="margin-top:8px;padding-left:20px;max-height:150px;overflow-y:auto;">` +
+              errors.map(e => `<li>${e}</li>`).join('') + '</ul>';
+            csvImportError.style.display = 'block';
+            confirmCsvBtn.innerHTML = originalText;
+            confirmCsvBtn.disabled = false;
+            showToast(`Import completed with errors.`, 'warning');
+          } else {
+            showToast(`✅ Successfully imported ${successCount} phones!`, 'success');
+            csvPreviewModal.classList.remove('open');
+          }
+
+        } catch (err) {
+          console.error('CSV Import Error:', err);
+          csvImportError.textContent = 'Import failed: ' + err.message;
+          csvImportError.style.display = 'block';
+          confirmCsvBtn.innerHTML = originalText;
+          confirmCsvBtn.disabled = false;
+        }
       });
     }
 
