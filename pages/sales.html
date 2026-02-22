@@ -154,12 +154,24 @@
               </div>
 
               <!-- Phone list -->
-              <div id="phoneListWrap" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;
+              <div id="phoneListWrap" style="min-height:200px;display:flex;flex-direction:column;gap:8px;
                 padding-right:4px;margin-top:4px;">
                 <div id="phoneLoadingMsg" style="text-align:center;padding:32px;color:#94A3B8;">
                   <i class="fas fa-spinner fa-spin" style="font-size:22px;display:block;margin-bottom:10px;"></i>
                   Fetching available phones...
                 </div>
+              </div>
+
+              <!-- Pagination Controls -->
+              <div id="phonePagination"
+                style="display:flex;justify-content:center;align-items:center;gap:15px;margin-top:16px;padding-top:10px;border-top:1px solid #F1F5F9;">
+                <button id="prevPage" class="page-btn" style="width:auto;padding:0 12px;display:none;">
+                  <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <div id="pageInfo" style="font-size:13px;font-weight:600;color:#64748B;">Page 1 of 1</div>
+                <button id="nextPage" class="page-btn" style="width:auto;padding:0 12px;display:none;">
+                  Next <i class="fas fa-chevron-right"></i>
+                </button>
               </div>
             </div>
 
@@ -437,12 +449,31 @@
     const currentUser = JSON.parse(storedUser);
 
     let allAvailablePhones = [];   // master list loaded once
+    let filteredPhones = [];      // current view list
+    let currentPage = 1;
+    const itemsPerPage = 3;
     let selectedPhone = null;
     let shopSettings = null;
 
     /* ── Init ── */
     initSidebar(currentUser);
     await loadEverything();
+
+    // Pagination Click Handlers
+    document.getElementById('prevPage').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPhoneList(filteredPhones);
+      }
+    });
+
+    document.getElementById('nextPage').addEventListener('click', () => {
+      const maxPage = Math.ceil(filteredPhones.length / itemsPerPage);
+      if (currentPage < maxPage) {
+        currentPage++;
+        renderPhoneList(filteredPhones);
+      }
+    });
 
     async function loadEverything() {
       // Load shop settings (for shop UPI)
@@ -454,15 +485,6 @@
       await loadAvailablePhones();
     }
 
-    /* ─────────────────────────────────────────────────────────────────
-       FIX: Do NOT use where('status','==','Available')
-       Reason: That query requires a Firestore composite index which
-       may not exist in a new project, causing a silent permission /
-       index error — the getDocs resolves empty or throws.
-  
-       Solution: Fetch ALL phones (no where clause), then filter
-       client-side. This works without any index configuration.
-    ───────────────────────────────────────────────────────────────── */
     async function loadAvailablePhones() {
       const wrap = document.getElementById('phoneListWrap');
       const msgEl = document.getElementById('phoneLoadingMsg');
@@ -476,60 +498,56 @@
         allAvailablePhones = [];
         snap.forEach(d => {
           const data = d.data();
-          // Filter available phones client-side
           if (data.status === 'Available') {
             allAvailablePhones.push({ id: d.id, ...data });
           }
         });
 
-        // Sort by newest first
-        allAvailablePhones.sort((a, b) => {
-          const ta = a.createdAt?.seconds || 0;
-          const tb = b.createdAt?.seconds || 0;
-          return tb - ta;
-        });
+        allAvailablePhones.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
         const count = allAvailablePhones.length;
         cntEl.textContent = `${count} Available`;
         lblEl.textContent = `${count} phone${count !== 1 ? 's' : ''} ready for sale`;
 
-        renderPhoneList(allAvailablePhones);
+        filteredPhones = [...allAvailablePhones];
+        renderPhoneList(filteredPhones);
 
       } catch (err) {
         console.error('Error loading phones:', err);
-        wrap.innerHTML = `
-        <div style="text-align:center;padding:32px;color:#EF4444;">
-          <i class="fas fa-exclamation-triangle" style="font-size:24px;display:block;margin-bottom:10px;"></i>
-          <div style="font-weight:600;">Failed to load phones</div>
-          <div style="font-size:12px;margin-top:6px;color:#94A3B8;">${err.message}</div>
-          <button onclick="location.reload()" class="btn-secondary btn-sm" style="margin-top:12px;">
-            <i class="fas fa-redo"></i> Retry
-          </button>
-        </div>`;
-        cntEl.textContent = 'Error';
-        lblEl.textContent = 'Could not load stock';
+        wrap.innerHTML = `<div style="text-align:center;padding:32px;color:#EF4444;">...</div>`;
       }
     }
 
     function renderPhoneList(phones) {
       const wrap = document.getElementById('phoneListWrap');
+      const prevBtn = document.getElementById('prevPage');
+      const nextBtn = document.getElementById('nextPage');
+      const pageInfo = document.getElementById('pageInfo');
 
       if (phones.length === 0) {
         wrap.innerHTML = `
         <div style="text-align:center;padding:32px;color:#94A3B8;">
           <i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4;"></i>
           <div style="font-weight:600;margin-bottom:4px;">No available phones</div>
-          <div style="font-size:12px;">Add phones in the "Add Phones" section first.</div>
         </div>`;
+        document.getElementById('phonePagination').style.display = 'none';
         return;
       }
 
-      wrap.innerHTML = phones.map(p => `
+      document.getElementById('phonePagination').style.display = 'flex';
+      const maxPage = Math.ceil(phones.length / itemsPerPage);
+      if (currentPage > maxPage) currentPage = maxPage || 1;
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const paginatedItems = phones.slice(start, end);
+
+      wrap.innerHTML = paginatedItems.map(p => `
       <div class="phone-result-row"
         onclick="selectPhone('${p.id}')"
         style="display:flex;justify-content:space-between;align-items:center;
           padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:10px;
-          cursor:pointer;background:#fff;">
+          cursor:pointer;background:#fff;margin-bottom:8px;">
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:700;color:#1E293B;margin-bottom:2px;">
             ${p.brand} ${p.model}
@@ -537,46 +555,35 @@
           <div style="font-size:12px;color:#64748B;margin-bottom:4px;">
             IMEI: <span style="font-family:monospace;">${p.imei}</span>
             &nbsp;•&nbsp; ${p.ram} / ${p.storage}
-            ${p.color ? '&nbsp;•&nbsp; ' + p.color : ''}
           </div>
-          ${p.isThirdParty
-          ? `<span class="badge badge-warning" style="font-size:10px;">
-                 <i class="fas fa-user-tie"></i> ${p.supplierName || 'Third Party'}
-               </span>`
-          : `<span class="badge badge-info" style="font-size:10px;">
-                 <i class="fas fa-store"></i> Shop Owned
-               </span>`
-        }
+          ${p.isThirdParty ? `<span class="badge badge-warning" style="font-size:10px;">Supplier: ${p.supplierName}</span>` : `<span class="badge badge-info" style="font-size:10px;">Shop Owned</span>`}
         </div>
         <div style="text-align:right;margin-left:12px;flex-shrink:0;">
-          <div style="font-size:17px;font-weight:800;color:#4F46E5;">
-            ₹${(p.sellingPrice || 0).toLocaleString('en-IN')}
-          </div>
-          <div style="font-size:11px;color:#10B981;margin-top:2px;">
-            <i class="fas fa-circle" style="font-size:7px;"></i> Available
-          </div>
+          <div style="font-size:17px;font-weight:800;color:#4F46E5;">₹${(p.sellingPrice || 0).toLocaleString('en-IN')}</div>
         </div>
       </div>
     `).join('');
+
+      // Update pagination UI
+      pageInfo.textContent = `Page ${currentPage} of ${maxPage}`;
+      prevBtn.style.display = currentPage > 1 ? 'flex' : 'none';
+      nextBtn.style.display = currentPage < maxPage ? 'flex' : 'none';
     }
 
-    /* ── Filter phones by search term ── */
     window.filterPhones = function (term) {
       const t = term.trim().toLowerCase();
       if (!t) {
-        renderPhoneList(allAvailablePhones);
-        return;
+        filteredPhones = [...allAvailablePhones];
+      } else {
+        filteredPhones = allAvailablePhones.filter(p =>
+          (p.brand || '').toLowerCase().includes(t) ||
+          (p.model || '').toLowerCase().includes(t) ||
+          (p.imei || '').includes(t) ||
+          (p.supplierName || '').toLowerCase().includes(t)
+        );
       }
-      const filtered = allAvailablePhones.filter(p =>
-        (p.brand || '').toLowerCase().includes(t) ||
-        (p.model || '').toLowerCase().includes(t) ||
-        (p.imei || '').includes(t) ||
-        (p.color || '').toLowerCase().includes(t) ||
-        (p.ram || '').toLowerCase().includes(t) ||
-        (p.storage || '').toLowerCase().includes(t) ||
-        (p.supplierName || '').toLowerCase().includes(t)
-      );
-      renderPhoneList(filtered);
+      currentPage = 1; // Reset to page 1 on search
+      renderPhoneList(filteredPhones);
     };
 
     /* ── Select a phone ── */
@@ -625,7 +632,8 @@
       // Scroll search back to top
       document.getElementById('phoneListWrap').scrollTop = 0;
       document.getElementById('phoneSearch').value = '';
-      renderPhoneList(allAvailablePhones);
+      filteredPhones = [...allAvailablePhones];
+      renderPhoneList(filteredPhones);
 
       // Scroll to selected card
       document.getElementById('selectedPhoneCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -644,7 +652,7 @@
       document.getElementById('payCard').value = 0;
       document.getElementById('paidTotal').textContent = '₹0';
       document.getElementById('remainingBar').style.display = 'none';
-      renderPhoneList(allAvailablePhones);
+      renderPhoneList(filteredPhones);
     };
 
     /* ── Toggle exchange section ── */
@@ -914,12 +922,13 @@
 
         showToast('Sale completed! PDF bill downloaded.', 'success');
 
-        // Remove sold phone from available list
+        // Remove sold phone from list and update view
         allAvailablePhones = allAvailablePhones.filter(p => p.id !== selectedPhone.id);
+        filteredPhones = filteredPhones.filter(p => p.id !== selectedPhone.id);
 
         // Reset everything
         clearSaleForm();
-        renderPhoneList(allAvailablePhones);
+        renderPhoneList(filteredPhones);
         document.getElementById('availableCount').textContent =
           `${allAvailablePhones.length} Available`;
         document.getElementById('phoneCountLabel').textContent =
@@ -952,6 +961,8 @@
       document.getElementById('enableExchange').checked = false;
       document.getElementById('exchangeSection').style.display = 'none';
       document.getElementById('phoneSearch').value = '';
+      filteredPhones = [...allAvailablePhones];
+      currentPage = 1;
       document.getElementById('saleError').style.display = 'none';
     }
 
