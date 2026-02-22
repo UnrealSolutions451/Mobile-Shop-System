@@ -1,0 +1,6 @@
+Brand,Model,IMEI,RAM,Storage,Color,PurchasePrice,SellingPrice,Description,IsThirdParty,SupplierName,SupplierUPI,SupplierPhone,OldOwnerName,OldPurchasePrice,Aadhar
+Samsung,Galaxy S23,123456789012345,8 GB,256 GB,Phantom Black,55000,72000,Perfect condition with box,false,,,,,,
+Apple,iPhone 14,987654321098765,6 GB,128 GB,Starlight,45000,60000,Minor scratches on side,true,John Doe,john@okaxis,9876543210,,0,
+Xiaomi,Redmi Note 12,112233445566778,6 GB,128 GB,Ice Blue,12000,16500,Brand new,false,,,,,,
+Realme,Realme 11 Pro,556677889900112,8 GB,256 GB,Sunrise Beige,18000,24000,Used 2 months,true,Jane Smith,jane@upi,9000000000,Previous User,15000,123412341234
+Google,Pixel 7,223344556677889,8 GB,128 GB,Lemongrass,38000,52000,Original charger available,false,,,,,,
